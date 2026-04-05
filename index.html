@@ -1635,7 +1635,7 @@ let currentUser = null;
         </div>
         <div class="form-group">
           <label>Chữ/chương</label>
-          <input id="c-words" type="number" value="2000" min="500" max="8000">
+          <input id="c-words" type="number" value="1300" min="1000" max="1600">
         </div>
         <div class="form-group">
           <label>Nhiệt độ (Sáng tạo)</label>
@@ -2104,7 +2104,7 @@ let currentUser = null;
         <div class="grid2">
           <div class="form-group">
             <label>Max tokens/lần gọi</label>
-            <input id="set-max-tokens" type="number" value="8000" min="1024" max="16000"><div class="hint">Tiếng Việt ~1.5 token/từ. 2000 từ ≈ 3000 token. Nên để 8000+ để tránh bị ngắt giữa chừng.</div>
+            <input id="set-max-tokens" type="number" value="8000" min="1024" max="16000"><div class="hint">Tiếng Việt ~1.5 token/từ. 1300 từ ≈ 2000 token. Giới hạn chương: 1000–1600 từ.</div>
           </div>
           <div class="form-group">
             <label>Temperature mặc định</label>
@@ -2633,7 +2633,7 @@ Bí mật/Điểm yếu: [1-2 câu]
 Tiếng Việt tự nhiên.`;
 
   try {
-    const result = await callClaude(prompt, 900, 0.85);
+    const result = await callClaude(prompt, 600, 0.85);
     closeMainCharModal();
     await autoFillMainChars(result, count);
     toast('✅ Đã tạo ' + count + ' nhân vật chính!');
@@ -2702,41 +2702,39 @@ async function aiGenerateFullFramework() {
   const chaps = document.getElementById('c-chapters')?.value || 20;
 
   const prompt =
-    `Xây dựng khung hoàn chỉnh cho tiểu thuyết "${title}" (${genre}${sub?'+'+sub:''}${tone?', tone: '+tone:''}, ${chaps} chương).
-
-Trả lời CHÍNH XÁC theo format (không thêm gì khác):
+    `Tạo khung truyện "${title}" (${genre}${sub?'+'+sub:''}${tone?', tone '+tone:''}). Trả lời đúng format:
 
 ===NHÂN VẬT CHÍNH===
 Tên: [tên]
 Giới tính: [nam/nữ]
 Tuổi: [số]
-Thân phận/Vai trò: [ngắn gọn]
-Tính cách: [3-4 đặc điểm]
-Thân thế & Quá khứ: [2-3 câu]
-Mục tiêu/Động lực: [1-2 câu]
-Bí mật/Điểm yếu: [1-2 câu]
+Thân phận/Vai trò: [ngắn]
+Tính cách: [3 đặc điểm]
+Thân thế & Quá khứ: [1-2 câu]
+Mục tiêu/Động lực: [1 câu]
+Bí mật/Điểm yếu: [1 câu]
 ===HẾT NV CHÍNH===
 
 ===THẾ GIỚI QUAN===
-Thời đại/Bối cảnh: [1-2 câu]
-Địa điểm chính: [ngắn gọn]
-Quy tắc/Hệ thống: [2-3 câu đặc trưng thế giới]
-Phe phái/Tổ chức: [tên + vai trò ngắn]
+Thời đại/Bối cảnh: [1 câu]
+Địa điểm chính: [ngắn]
+Quy tắc/Hệ thống: [1-2 câu]
+Phe phái/Tổ chức: [ngắn]
 Không khí/Vibe: [1 câu]
 ===HẾT THẾ GIỚI===
 
 ===CỐT TRUYỆN===
-Xung đột chính: [1-2 câu]
-Mở đầu: [2-3 câu sự kiện khởi động]
-Kết thúc dự kiến: [1-2 câu]
-Twist/Bất ngờ: [1-2 câu]
+Xung đột chính: [1 câu]
+Mở đầu: [1-2 câu]
+Kết thúc dự kiến: [1 câu]
+Twist/Bất ngờ: [1 câu]
 Chủ đề/Thông điệp: [1 câu]
 ===HẾT CỐT TRUYỆN===
 
-Tiếng Việt, sáng tạo, phù hợp thể loại ${genre}.`;
+Tiếng Việt, sáng tạo.`;
 
   try {
-    const result = await callClaude(prompt, 1500, 0.85);
+    const result = await callClaude(prompt, 800, 0.85);
     autoFillFramework(result);
     toast('✅ Đã tạo khung truyện! Kiểm tra và chỉnh sửa nếu cần.', 4000);
     updateWorkflowState();
@@ -2948,7 +2946,7 @@ function saveFormDraft() {
     title:    document.getElementById('c-title')?.value || '',
     genre:    document.getElementById('c-genre')?.value || '',
     chapters: document.getElementById('c-chapters')?.value || '20',
-    words:    document.getElementById('c-words')?.value || '2000',
+    words:    document.getElementById('c-words')?.value || '1300',
     temp:     document.getElementById('c-temp')?.value || '0.8',
     subGenres: selectedSubGenres,
     voiceProfile: voiceProfile,
@@ -3214,7 +3212,7 @@ function doResetForm() {
     if (el) { el.tagName === 'SELECT' ? el.value = '' : el.value = ''; }
   });
   document.getElementById('c-chapters').value = '20';
-  document.getElementById('c-words').value = '2000';
+  document.getElementById('c-words').value = '1300';
   document.getElementById('c-temp').value = '0.8';
   document.getElementById('c-temp-val').textContent = '0.8';
   document.getElementById('outline-section').style.display = 'none';
@@ -3260,7 +3258,7 @@ function clearDraft() {
   document.getElementById('c-title').value = '';
   document.getElementById('c-genre').value = '';
   document.getElementById('c-chapters').value = '20';
-  document.getElementById('c-words').value = '2000';
+  document.getElementById('c-words').value = '1300';
   document.getElementById('c-temp').value = '0.8';
   document.getElementById('c-temp-val').textContent = '0.8';
   document.getElementById('c-outline').value = '';
@@ -3915,7 +3913,7 @@ async function masterAiSuggestAll() {
   const prompt = buildMasterPrompt(title, genre, sub, tone, 'all');
 
   try {
-    const result = await callClaude(prompt, 1200, 0.9);
+    const result = await callClaude(prompt, 900, 0.85);
     bodyEl.textContent = result;
     parseMasterSuggest(result);
     toast('✅ AI đã gợi ý xong! Nhấn "✅ Áp dụng tất cả" để điền vào form.', 4000);
@@ -3948,7 +3946,7 @@ async function masterAiSuggestSection(section) {
   const prompt = buildMasterPrompt(title, genre, sub, tone, section);
 
   try {
-    const result = await callClaude(prompt, 1000, 0.9);
+    const result = await callClaude(prompt, 500, 0.85);
     bodyEl.textContent = result;
     // Store for partial apply
     masterSuggestData[section] = result;
@@ -3960,152 +3958,54 @@ async function masterAiSuggestSection(section) {
 }
 
 function buildMasterPrompt(title, genre, sub, tone, section) {
-  const titleLine = title ? `Tên truyện: 《${title}》` : '';
-  const genreLine = `Thể loại chính: ${genre}`;
-  const subLine = sub ? `Thể loại phụ / Tag: ${sub}` : '';
-  const toneLine = tone ? `Màu sắc / Tone: ${tone}` : '';
-  const context = [titleLine, genreLine, subLine, toneLine].filter(Boolean).join('\n');
+  const ctx = [
+    title ? `《${title}》` : '',
+    genre,
+    sub  ? sub  : '',
+    tone ? 'tone: ' + tone : '',
+  ].filter(Boolean).join(' | ');
 
   const templates = {
-    chars: `Bạn là chuyên gia sáng tác tiểu thuyết. Dựa vào thông tin sau:
-${context}
+    chars: `Gợi ý dàn nhân vật cho truyện ${ctx}.
+NV chính: Tên|Giới tính|Tuổi|Thân phận|Tính cách (3 điểm)|Mục tiêu|Bí mật
+NV phụ (2-3): Tên|Loại quan hệ|Tính cách ngắn|Vai trò
+Phản diện: Tên|Động cơ thật
+Tiếng Việt, ngắn gọn, phù hợp thể loại.`,
 
-Hãy thiết kế dàn nhân vật HOÀN CHỈNH và phù hợp:
+    world: `Xây dựng thế giới quan cho truyện ${ctx}.
+Thời đại/Bối cảnh: [1-2 câu]
+Địa điểm chính: [tên + đặc trưng ngắn]
+Hệ thống đặc biệt: [2-3 câu]
+Phe phái: [tên | mục tiêu] (2-3 phe)
+Không khí/Vibe: [1 câu]
+Tiếng Việt, súc tích.`,
 
-【NHÂN VẬT CHÍNH 1】
-Tên: (phù hợp ${genre}, giới tính rõ ràng)
-Tuổi & thân phận:
-Tính cách: (3-5 đặc điểm, có mâu thuẫn nội tâm thú vị, phù hợp tone ${tone || 'của truyện'})
-Thân thế & quá khứ: (tạo nên con người họ, 2-3 câu)
-Mục tiêu / Động lực: (điều họ muốn nhất)
-Bí mật / Điểm yếu: (điều họ sợ hoặc giấu)
+    plot: `Xây dựng cốt truyện cho truyện ${ctx}.
+Xung đột cốt lõi: [1-2 câu]
+Điểm mở đầu ấn tượng: [1-2 câu]
+Diễn biến chính: [3-4 câu]
+Plot twist: [1-2 câu]
+Kết thúc: [hướng + lý do ngắn]
+Tiếng Việt, súc tích.`,
 
-【NHÂN VẬT CHÍNH 2】(nếu phù hợp với ${genre}${sub ? ' + ' + sub : ''})
-(cùng format trên, đảm bảo chemistry với NV1)
+    all: `Tạo blueprint đầy đủ cho truyện ${ctx}.
 
-【NHÂN VẬT PHỤ QUAN TRỌNG】(3-4 NV)
-• Tên | Giới tính | Loại (tình nhân/bạn/phản diện/mentor...)
-  Quan hệ với NV chính: [cụ thể với tên NV]
-  Tính cách nổi bật: 
-  Vai trò trong câu chuyện:
-  Điểm đặc biệt / Arc riêng:
+NHÂN VẬT CHÍNH: Tên|Giới tính|Tuổi|Thân phận|Tính cách|Mục tiêu|Bí mật
+NV PHỤ (2-3): Tên|Loại|Quan hệ|Vai trò
+PHẢN DIỆN: Tên|Động cơ
 
-【PHẢN DIỆN CHÍNH】
-Tên & thân phận:
-Động cơ thật sự: (đủ sâu để người đọc hiểu, dù không đồng ý)
-Điểm khiến người đọc có thể đồng cảm:
+THẾ GIỚI QUAN:
+Bối cảnh: [1-2 câu]
+Hệ thống: [2-3 câu]
+Phe phái: [ngắn]
 
-Thiết kế nhân vật phù hợp đặc trưng của ${genre}${sub ? ' + ' + sub : ''}${tone ? ', tone ' + tone : ''}. Tiếng Việt.`,
+CỐT TRUYỆN:
+Xung đột: [1-2 câu]
+Mở đầu: [1-2 câu]
+Cao trào: [1-2 câu]
+Kết thúc: [1 câu]
 
-    world: `Bạn là chuyên gia xây dựng thế giới tiểu thuyết. Dựa vào:
-${context}
-
-Thiết kế thế giới quan độc đáo, phù hợp:
-
-BỐI CẢNH THỜI ĐẠI:
-(Thời điểm, hoàn cảnh xã hội cụ thể)
-
-ĐỊA ĐIỂM CHÍNH:
-(Tên + mô tả ngắn về không khí, đặc trưng nổi bật)
-
-HỆ THỐNG ĐẶC BIỆT:
-(Tu luyện / ma pháp / công nghệ / xã hội / quyền lực — chi tiết, có logic)
-
-THẾ LỰC & PHE PHÁI:
-• [Phe 1] — mục tiêu, đặc trưng
-• [Phe 2] — mục tiêu, xung đột với phe 1
-• [Phe 3 nếu có]
-
-KHÔNG KHÍ & MÀU SẮC:
-(Cảm giác khi đọc, ví von bằng hình ảnh cụ thể)
-
-GHI CHÚ ĐẶC BIỆT:
-(Quy tắc thế giới quan độc đáo, bí ẩn chưa được khám phá)
-
-Thiết kế phù hợp ${genre}${sub ? ' + ' + sub : ''}${tone ? ', tone ' + tone : ''}. Tiếng Việt.`,
-
-    plot: `Bạn là chuyên gia kịch bản tiểu thuyết. Dựa vào:
-${context}
-
-Xây dựng cốt truyện hấp dẫn:
-
-XUNG ĐỘT CỐT LÕI:
-(Điều gì thúc đẩy toàn bộ câu chuyện — rõ ràng, có stakes cao)
-
-ĐIỂM BẮT ĐẦU ẤN TƯỢNG:
-(Cảnh mở đầu, tình huống ban đầu kéo người đọc vào ngay)
-
-HỒI 1 — MỞ ĐẦU (25%):
-(Giới thiệu, thiết lập xung đột, hook)
-
-HỒI 2 — PHÁT TRIỂN (50%):
-(Leo thang xung đột, các sự kiện lớn, plot twist giữa truyện)
-
-HỒI 3 — KẾT THÚC (25%):
-(Cao trào, giải quyết, hậu truyện)
-
-PLOT TWIST CHÍNH:
-(Bất ngờ nhưng nhìn lại hoàn toàn hợp lý)
-
-CHỦ ĐỀ & THÔNG ĐIỆP:
-(Điều câu chuyện muốn nói)
-
-HƯỚNG KẾT THÚC:
-(Happy / Bad / Open ending — lý do phù hợp với tone ${tone || 'truyện'})
-
-Cốt truyện phải phù hợp ${genre}${sub ? ' + ' + sub : ''}${tone ? ', tone ' + tone : ''}. Tiếng Việt.`,
-
-    all: `Bạn là chuyên gia sáng tác tiểu thuyết toàn năng. Dựa vào:
-${context}
-
-Hãy sáng tạo TOÀN BỘ blueprint cho bộ truyện này. Viết chi tiết, nhất quán và phù hợp với thể loại ${genre}${sub ? ' + ' + sub : ''}${tone ? ', tone ' + tone : ''}:
-
-═══════════════════════════════
-PHẦN 1: NHÂN VẬT
-═══════════════════════════════
-
-【NHÂN VẬT CHÍNH 1】
-Tên & Giới tính:
-Tuổi & Thân phận:
-Tính cách:
-Thân thế & Quá khứ:
-Mục tiêu / Động lực:
-Bí mật / Điểm yếu:
-
-【NHÂN VẬT CHÍNH 2】(nếu cần)
-(cùng format)
-
-【DÀN NHÂN VẬT PHỤ】
-• Tên | Loại | Quan hệ với NV chính | Tính cách | Vai trò | Điểm đặc biệt
-(3-4 nhân vật phụ)
-
-【PHẢN DIỆN】
-Tên | Động cơ | Điểm đồng cảm
-
-═══════════════════════════════
-PHẦN 2: THẾ GIỚI QUAN
-═══════════════════════════════
-
-Bối cảnh thời đại:
-Địa điểm chính:
-Hệ thống đặc biệt:
-Thế lực & Phe phái:
-Không khí:
-
-═══════════════════════════════
-PHẦN 3: CỐT TRUYỆN
-═══════════════════════════════
-
-Xung đột cốt lõi:
-Điểm bắt đầu:
-Hồi 1 - Mở đầu (25%):
-Hồi 2 - Phát triển (50%):
-Hồi 3 - Kết thúc (25%):
-Plot twist chính:
-Chủ đề & Thông điệp:
-Hướng kết thúc:
-
-Viết nhất quán, mỗi phần hỗ trợ phần kia. Tiếng Việt.`
+Tiếng Việt, súc tích, đúng thể loại.`,
   };
   return templates[section] || templates.all;
 }
@@ -4199,7 +4099,7 @@ async function runAiSuggest(btnId, resultId, contentId, prompt) {
   resultEl.classList.add('show');
   contentEl.textContent = '⏳ AI đang phân tích...';
   try {
-    const result = await callClaude(prompt, 800, 0.9);
+    const result = await callClaude(prompt, 400, 0.85);
     contentEl.textContent = result;
     if (btn) { btn.disabled = false; btn.innerHTML = btn._orig; }
     return result;
@@ -4232,26 +4132,13 @@ Mỗi NV: Tên|Loại quan hệ|Tính cách ngắn|Vai trò\nTiếng Việt.`;
 
 async function aiSuggestAllChars() {
   const { genre, sub, plot, world, tone } = getContext();
-  if (!genre) { toast('\u26a0\ufe0f H\xe3y ch\u1ecdn th\u1ec3 lo\u1ea1i tr\u01b0\u1edbc!'); return; }
-  const prompt = `Chuy\xean gia s\xe1ng t\xe1c ti\u1ec3u thuy\u1ebft ${genre}${sub?' + '+sub:''}${tone?', tone '+tone:''}.
-${world?'Th\u1ebf gi\u1edbi: '+world.slice(0,250):''}
-${plot?'C\u1ed1t truy\u1ec7n: '+plot.slice(0,250):''}
-
-Thi\u1ebft k\u1ebf d\xe0n nh\xe2n v\u1eadt HO\u00c0N CH\u1ec8NH ph\xf9 h\u1ee3p ${genre}${tone?', tone '+tone:''}:
-
-【NH\u00c2N V\u1eacT CH\xcdNH 1】
-T\xean | Gi\u1edbi t\xednh | Tu\u1ed5i | Th\xe2n ph\u1eadn
-T\xednh c\xe1ch (ph\xf9 h\u1ee3p tone) | M\u1ee5c ti\xeau | B\xed m\u1eadt/\u0110i\u1ec3m y\u1ebfu
-
-【NH\u00c2N V\u1eacT CH\xcdNH 2】(n\u1ebfu ph\xf9 h\u1ee3p)
-
-【D\u00c0N NH\u00c2N V\u1eacT PH\u1ee4】(3-5 nh\xe2n v\u1eadt)
-\u2022 T\xean | Lo\u1ea1i | Quan h\u1ec7 v\u1edbi NV ch\xednh n\xe0o | \u0110i\u1ec3m \u0111\u1eb7c bi\u1ec7t
-
-【PH\u1ea2N DI\u1ec6N CH\xcdNH】
-T\xean | \u0110\u1ed9ng c\u01a1 th\u1eadt | \u0110i\u1ec3m \u0111\u1ed3ng c\u1ea3m
-
-M\u1ed7i nh\xe2n v\u1eadt ph\u1ea3i c\xf3 l\xfd do t\u1ed3n t\u1ea1i r\xf5 r\xe0ng. Ti\u1ebfng Vi\u1ec7t.`;
+  if (!genre) { toast('⚠️ Hãy chọn thể loại trước!'); return; }
+  const prompt = `Gợi ý dàn nhân vật cho truyện ${genre}${tone?', tone '+tone:''}.${plot?'\nCốt: '+plot.slice(0,80):''}${world?'\nThế giới: '+world.slice(0,60):''}
+NV chính 1: Tên|Giới tính|Tuổi|Thân phận|Tính cách|Mục tiêu|Bí mật
+NV chính 2 (nếu cần): cùng format
+NV phụ (3-4): Tên|Loại|Quan hệ|Vai trò
+Phản diện: Tên|Động cơ thật
+Tiếng Việt, ngắn gọn.`;
   lastCharSuggest = await runAiSuggest('btn-ai-all-chars', 'ai-result-chars', 'ai-result-chars-content', prompt);
 }
 
@@ -4729,45 +4616,22 @@ async function analyzeVoiceStyle() {
   resultEl.style.display = 'block';
   profileEl.textContent = '\u23f3 AI \u0111ang \u0111\u1ecdc v\xe0 ph\xe2n t\xedch gi\u1ecdng v\u0103n...';
 
-  // Limit total to ~3000 words
+  // Limit sample to 800 words for speed
   const words = combinedText.split(/\s+/);
-  const sample = words.slice(0, 3000).join(' ');
+  const sample = words.slice(0, 800).join(' ');
   const fileCount = voiceFiles.length;
 
-  const prompt = 'B\u1ea1n l\xe0 chuy\xean gia ph\xe2n t\xedch v\u0103n h\u1ecdc. H\xe3y ph\xe2n t\xedch gi\u1ecdng v\u0103n v\xe0 phong c\xe1ch vi\u1ebft t\u1eeb ' +
-    (fileCount > 0 ? fileCount + ' file t\xe0i li\u1ec7u tham kh\u1ea3o' : '\u0111o\u1ea1n v\u0103n m\u1eabu') +
-    ', t\u1ea1o STYLE PROFILE \u0111\u1ea7y \u0111\u1ee7 \u0111\u1ec3 AI kh\xe1c b\u1eaft ch\u01b0\u1edbc ch\xednh x\xe1c:\n\n' +
+  const prompt = 'Ph\u00e2n t\u00edch gi\u1ecdng v\u0103n v\u00e0 t\u1ea1o Style Profile ng\u1eafn g\u1ecdn (5 m\u1ee5c) \u0111\u1ec3 AI b\u1eaft ch\u01b0\u1edbc ch\u00ednh x\u00e1c:\n\n' +
     '---\n' + sample + '\n---\n\n' +
-    'Ph\xe2n t\xedch chi ti\u1ebft theo 8 ti\xeau ch\xed:\n\n' +
-    '\u30001. NH\u1ecaP \u0110I\u1ec6U & C\u1ea4U TR\xdcC C\u00c2U\u3001\n' +
-    '- C\u00e2u ng\u1eafn hay d\xe0i? T\u1ef7 l\u1ec7 nh\u01b0 th\u1ebf n\xe0o?\n' +
-    '- C\xf3 d\xf9ng c\u00e2u \u0111\u01a1n li\xean ti\u1ebfp t\u1ea1o nh\u1ecbp nhanh kh\xf4ng?\n\n' +
-    '\u30002. \u0110I\u1ec2M NH\xecN & NG\u01af\u1edcI K\u1ec2\n' +
-    '- Ng\xf4i 1 / ng\xf4i 3 / kh\xe1c?\n' +
-    '- V\xe0o \u0111\u1ea7u nh\xe2n v\u1eadt s\u00e2u hay gi\u1eef kho\u1ea3ng c\xe1ch?\n\n' +
-    '\u30003. MI\xca U T\u1ea2 & H\xceNH \u1ea2NH\n' +
-    '- T\u1ef7 l\u1ec7 n\u1ed9i t\xe2m / h\xe0nh \u0111\u1ed9ng / \u0111\u1ed1i tho\u1ea1i?\n' +
-    '- D\xf9ng \u1ea9n d\u1ee5, so s\xe1nh nhi\u1ec1u kh\xf4ng? \u0110\u1eb7c tr\u01b0ng ra sao?\n\n' +
-    '\u30004. \u0110\u1ed0I THO\u1ea0I & N\u1ed8I T\u00c2M\n' +
-    '- Tho\u1ea1i ng\u1eafn hay d\xe0i? Phong c\xe1ch g\xec?\n' +
-    '- Monologue n\u1ed9i t\xe2m c\xf3 nhi\u1ec1u kh\xf4ng?\n\n' +
-    '\u30005. T\u1eea NG\u1eee & GI\u1eccNG \u0110I\u1ec6U\n' +
-    '- C\u1ed5 \u0111i\u1ec3n / hi\u1ec7n \u0111\u1ea1i / c\u1ed5 \u0111\u1ea1i / h\xe1n-vi\u1ec7t?\n' +
-    '- Trang tr\u1ecdng hay b\xecnh d\xe2n? M\u1ee9c \u0111\u1ed9?\n' +
-    '- C\xe1c c\u1ee5m t\u1eeb \u0111\u1eb7c tr\u01b0ng hay g\u1eb7p?\n\n' +
-    '\u30006. NH\u1ecaP C\u1ea2M X\xdaC\n' +
-    '- T\u1ed1c \u0111\u1ed9 k\u1ec3 chuy\u1ec7n: nhanh, ch\u1eadm, thay \u0111\u1ed5i?\n' +
-    '- C\xe1ch x\xe2y c\u0103ng th\u1eb3ng v\xe0 th\u1ea3 l\u1ecfng?\n' +
-    '- Tone c\u1ea3m x\xfac ch\u1ee7 \u0111\u1ea1o?\n\n' +
-    '\u30007. \u0110\u1eb6C \u0110I\u1ec2M \u0110\u1ed8C \u0110\u00c1O\n' +
-    '- \u0110i\u1ec1u g\xec l\xe0m gi\u1ecdng v\u0103n n\xe0y kh\xe1c bi\u1ec7t?\n' +
-    '- K\u1ef9 thu\u1eadt vi\u1ebft n\u1ed5i b\u1eadt nh\u1ea5t?\n\n' +
-    '\u30008. H\u01af\u1ee0NG D\u1eaaN \u00c1P D\u1ee4NG CHO AI\n' +
-    'Vi\u1ebft 4-6 c\xe2u h\u01b0\u1edbng d\u1eabn c\u1ee5 th\u1ec3, r\xf5 r\xe0ng \u0111\u1ec3 AI kh\xe1c khi vi\u1ebft s\u1ebd t\xe1i hi\u1ec7n \u0111\xfang gi\u1ecdng v\u0103n n\xe0y.\n\n' +
-    'Ph\xe2n t\xedch th\u1ef1c t\u1ebf, kh\xf4ng chung chung. Ti\u1ebfng Vi\u1ec7t.';
+    '1. NH\u1ecaP \u0110I\u1ec6U & C\u00c2U V\u0102N: c\u00e2u ng\u1eafn/d\u00e0i, nh\u1ecbp v\u0103n\n' +
+    '2. GI\u1eccNG \u0110I\u1ec6U & T\u1eea NG\u1eee: c\u1ed5 \u0111i\u1ec3n/hi\u1ec7n \u0111\u1ea1i, m\u1ee9c \u0111\u1ed9 trang tr\u1ecdng\n' +
+    '3. N\u1ed8I T\u00c2M & H\u00c0NH \u0110\u1ed8NG: t\u1ef7 l\u1ec7 mi\u00eau t\u1ea3/tho\u1ea1i/n\u1ed9i t\u00e2m\n' +
+    '4. T\u1ed0C \u0110\u1ed8 & C\u1ea2M X\xdaC: nhanh/ch\u1eadm, tone ch\u1ee7 \u0111\u1ea1o\n' +
+    '5. H\u01af\u1ee0NG D\u1eaaN AI (3-4 c\u00e2u c\u1ee5 th\u1ec3 \u0111\u1ec3 t\xe1i hi\u1ec7n \u0111\xfang gi\u1ecdng v\u0103n n\xe0y)\n\n' +
+    'Ng\u1eafn g\u1ecdn, th\u1ef1c t\u1ebf, ti\u1ebfng Vi\u1ec7t.';
 
   try {
-    const result = await callClaude(prompt, 1000, 0.3);
+    const result = await callClaude(prompt, 400, 0.3);
     voiceProfile = result;
     profileEl.textContent = result;
     badge.className = 'status status-done'; badge.textContent = '\u2713 \u0110\xe3 ph\xe2n t\xedch';
@@ -4797,7 +4661,7 @@ async function previewVoiceStyle() {
     voiceProfile + '\n\n' +
     '\u0110o\u1ea1n v\u0103n c\xf3 th\u1ec3 v\u1ec1 b\u1ea5t k\u1ef3 c\u1ea3nh n\xe0o (g\u1eb7p g\u1ee1, h\xe0nh \u0111\u1ed9ng, n\u1ed9i t\xe2m). M\u1ee5c ti\xeau l\xe0 th\u1ec3 hi\u1ec7n gi\u1ecdng v\u0103n.\nCH\u1ec8 xu\u1ea5t \u0111o\u1ea1n v\u0103n, kh\xf4ng gi\u1ea3i th\xedch.';
   try {
-    const result = await callClaude(prompt, 700, 0.88);
+    const result = await callClaude(prompt, 500, 0.88);
     outEl.textContent = result;
   } catch(e) {
     outEl.textContent = '\u274c ' + e.message;
@@ -5450,7 +5314,7 @@ async function writeChapter(idx) {
   cwWriting = true;
   const ch = cwChapters[idx];
   const proj = projects.find(p => p.id === cwProjId);
-  const targetWords = parseInt(document.getElementById('c-words').value) || 2000;
+  const targetWords = Math.min(1600, Math.max(1000, parseInt(document.getElementById('c-words').value) || 1300));
   const temp = parseFloat(document.getElementById('c-temp').value) || 0.8;
   const subGenreText = getSubGenreText();
   const genre = document.getElementById('c-genre').value;
@@ -5541,9 +5405,9 @@ CHỈ xuất nội dung chương, không tiêu đề, không ghi chú.`;
   try {
     abortController = new AbortController();
     // Tính max_tokens dựa theo số từ yêu cầu (tiếng Việt ~1.5 token/từ, thêm 20% buffer)
-  const neededTokens = Math.ceil(targetWords * 1.5 * 1.2);
-  const chapterMaxTokens = Math.max(neededTokens, settings.maxTokens || 8000);
-  const chapterText = await callClaude(prompt, Math.min(16000, chapterMaxTokens), temp);
+  const neededTokens = Math.ceil(targetWords * 1.5 * 1.2);  // 1300 từ → ~2340 tokens
+  const chapterMaxTokens = Math.min(4000, Math.max(neededTokens, 2000));  // cap 4000 tokens
+  const chapterText = await callClaude(prompt, chapterMaxTokens, temp);
     if (!chapterText || chapterText.trim().length < 100) {
       toast('\u26a0\ufe0f N\u1ed9i dung qu\xe1 ng\u1eafn, th\u1eed l\u1ea1i.');
       cwWriting = false; setChStatus('idle', 'Th\u1eed l\u1ea1i');
@@ -5781,7 +5645,7 @@ async function runParaEdit(instruction) {
     'CHỈ xuất đoạn đã chỉnh sửa, không giải thích, không tiêu đề.';
 
   try {
-    const result = await callClaude(prompt, 2000, 0.75);
+    const result = await callClaude(prompt, 1000, 0.75);
     paraEditResult = result.trim();
     bodyEl.className = 'per-body';
     bodyEl.textContent = paraEditResult;
@@ -6120,7 +5984,7 @@ async function writeContChapter(idx) {
   const proj = projects.find(p => p.id === contProjId);
   if (!proj) return;
 
-  const targetWords = 2000;
+  const targetWords = 1300;
   const temp = parseFloat(document.getElementById('c-temp')?.value) || 0.8;
   const genre = proj.genre || '';
   const title = proj.title || '';
