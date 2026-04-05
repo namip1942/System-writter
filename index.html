@@ -3308,27 +3308,45 @@ async function testEdgeFunction() {
   const el = document.getElementById('api-test-result');
   const btn = document.getElementById('btn-test-edge');
   if (!el) return;
-  el.innerHTML = '<span class="spinner"></span> Đang kiểm tra Edge Function...';
+  el.innerHTML = '<span class="spinner"></span> Đang kiểm tra...';
   if (btn) btn.disabled = true;
   try {
     const token = await getAuthToken();
+    if (!token) throw new Error('Không lấy được token đăng nhập');
+
     const res = await fetch(EDGE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ prompt: 'Trả lời 2 từ: xác nhận', maxTokens: 30, temperature: 0.1 })
+      body: JSON.stringify({ prompt: 'Hi', maxTokens: 30, temperature: 0.1 })
     });
-    const data = await res.json();
+
+    let data = {};
+    try { data = await res.json(); } catch(je) { data = { error: 'Phản hồi không hợp lệ (HTTP ' + res.status + ')' }; }
+
+    console.log('[testEdge] status:', res.status, 'data:', data);
+
     if (res.ok && data.result) {
-      el.innerHTML = '<span style="color:#155724;">✅ Edge Function OK — ' + (data.result || 'Kết nối thành công') + '</span>';
-      if (data.usage) el.innerHTML += '<br><span style="font-size:.75rem;color:var(--mist);">Quota hôm nay: ' + data.usage.used_today + '/' + data.usage.limit + ' tokens</span>';
-      toast('✅ Edge Function đang hoạt động!');
+      el.innerHTML = '✅ <strong>Kết nối thành công!</strong>';
+      if (data.usage) {
+        el.innerHTML += '<br><span style="font-size:.75rem;color:var(--mist);">Quota hôm nay: '
+          + data.usage.used_today + ' / ' + data.usage.limit + ' tokens '
+          + '(' + data.usage.plan + ')</span>';
+      }
+      toast('✅ Edge Function hoạt động bình thường!');
     } else if (data.error === 'quota_exceeded') {
-      el.innerHTML = '<span style="color:#856404;">⚠️ Hết quota hôm nay (' + data.used + '/' + data.limit + ' tokens)</span>';
+      el.innerHTML = '⚠️ <strong>Hết quota hôm nay</strong> — '
+        + (data.used || 0) + '/' + (data.limit || 3000) + ' tokens dùng rồi.<br>'
+        + '<span style="font-size:.75rem;color:var(--mist);">Reset lúc 0:00 sáng.</span>';
     } else {
-      el.innerHTML = '<span style="color:#721c24;">❌ ' + (data.error || 'Lỗi không xác định') + '</span>';
+      // Show raw error details for debugging
+      const errMsg = data.error || data.message || ('HTTP ' + res.status);
+      el.innerHTML = '❌ <strong>' + errMsg + '</strong>'
+        + '<br><span style="font-size:.72rem;color:var(--mist);">Status: ' + res.status + ' | Xem Console (F12) để biết thêm</span>';
     }
   } catch(e) {
-    el.innerHTML = '<span style="color:#721c24;">❌ ' + e.message + '</span>';
+    console.error('[testEdge] error:', e);
+    el.innerHTML = '❌ <strong>' + e.message + '</strong>'
+      + '<br><span style="font-size:.72rem;color:var(--mist);">Xem Console (F12) để biết thêm</span>';
   }
   if (btn) btn.disabled = false;
 }
