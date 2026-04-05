@@ -2825,11 +2825,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function loadSettings() {
   const s = settings;
+
+  // Migrate old model names
+  const modelMap = {
+    'claude-sonnet-4-5':          'claude-sonnet-4-6',
+    'claude-sonnet-4-5-20251101': 'claude-sonnet-4-6',
+    'claude-opus-4-5':            'claude-opus-4-6',
+    'claude-opus-4-5-20251101':   'claude-opus-4-6',
+    'claude-haiku-4-5':           'claude-haiku-4-5-20251001',
+  };
+  if (s.model && modelMap[s.model]) {
+    s.model = modelMap[s.model];
+    settings.model = s.model;
+    localStorage.setItem('tinix_settings', JSON.stringify(settings));
+  }
+  if (!s.model) settings.model = 'claude-sonnet-4-6';
+
   if (s.apiKey) document.getElementById('api-key-input').value = s.apiKey;
-  if (s.model) document.getElementById('model-select').value = s.model;
-  if (s.maxTokens) document.getElementById('set-max-tokens').value = s.maxTokens;
+  if (s.model)  document.getElementById('model-select').value  = s.model;
+  if (s.maxTokens)  document.getElementById('set-max-tokens').value = s.maxTokens;
   if (s.temperature) document.getElementById('set-temp').value = s.temperature;
-  // Also fill header key
   if (s.apiKey) document.getElementById('header-api-key').value = s.apiKey;
 }
 
@@ -2911,7 +2926,7 @@ function checkAPIStatus() {
   if (hasKey) {
     dot.className = 'api-dot ok';
     const masked = settings.apiKey.slice(0,12) + '···' + settings.apiKey.slice(-4);
-    txt.innerHTML = `<span style="color:#5cb85c;font-weight:600;">${settings.model||'claude-sonnet-4-5'}</span> <span style="font-size:.72rem;opacity:.6;">${masked}</span>`;
+    txt.innerHTML = `<span style="color:#5cb85c;font-weight:600;">${settings.model||'claude-sonnet-4-6'}</span> <span style="font-size:.72rem;opacity:.6;">${masked}</span>`;
     if (btn) btn.textContent = '⚙ Đổi key';
   } else {
     dot.className = 'api-dot';
