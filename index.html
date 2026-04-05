@@ -1290,16 +1290,18 @@ let currentUser = null;
               <option value="Võ hiệp">⚔️ Võ hiệp / Kiếm hiệp</option>
               <option value="Hệ thống">⚡ Hệ thống / Vả mặt</option>
               <option value="Vô hạn lưu">∞ Vô hạn lưu / Xuyên nhanh</option>
-              <option value="Dị giới">🌀 Dị giới / Trọng sinh</option>
+              <option value="Trọng sinh">🔄 Trọng sinh / Xuyên không</option>
+              <option value="Hắc ám huyền huyễn">🌑 Hắc ám huyền huyễn</option>
               <option value="Ma pháp">🔮 Ma pháp / Tây huyễn</option>
+              <option value="Dị giới">🌀 Dị giới / Isekai</option>
             </optgroup>
             <optgroup label="─── Cổ đại / Lịch sử ───">
-              <option value="Cổ đại ngôn tình">🏮 Cổ đại ngôn tình</option>
               <option value="Cung đấu">🏯 Cung đấu / Hậu cung</option>
+              <option value="Cổ đại ngôn tình">🏮 Cổ đại ngôn tình</option>
               <option value="Lịch sử chính sử">📜 Lịch sử / Chính sử</option>
               <option value="Quan trường cổ đại">🎎 Quan trường cổ đại</option>
-              <option value="Nữ cường cổ đại">👑 Nữ cường cổ đại / Xuyên nữ chủ</option>
-              <option value="Gian thần cổ đại">🗡️ Gian thần / Mưu sĩ cổ đại</option>
+              <option value="Nữ cường cổ đại">👑 Nữ cường cổ đại</option>
+              <option value="Mưu sĩ Quân sự">🗡️ Mưu sĩ / Quân sự cổ đại</option>
             </optgroup>
             <optgroup label="─── Lãng mạn / Tình cảm ───">
               <option value="Đô thị ngôn tình">💕 Đô thị ngôn tình</option>
@@ -1308,7 +1310,7 @@ let currentUser = null;
               <option value="Ngọt sủng">🍭 Ngọt sủng / Rắc đường</option>
               <option value="Hào môn">🏰 Hào môn / Tổng tài</option>
               <option value="Điền văn">🌿 Điền văn / Sinh hoạt</option>
-              <option value="Học đường tình cảm">🎓 Học đường / Thanh xuân</option>
+              <option value="Học đường">🎓 Học đường / Thanh xuân</option>
             </optgroup>
             <optgroup label="─── Hiện đại / Đô thị ───">
               <option value="Đô thị">🏙️ Đô thị / Hiện đại</option>
@@ -1321,15 +1323,24 @@ let currentUser = null;
               <option value="Mỹ thực ẩm thực">🍜 Mỹ thực / Ẩm thực</option>
             </optgroup>
             <optgroup label="─── Kinh dị / Huyền bí ───">
-              <option value="Kinh dị tâm lý">😱 Kinh dị / Huyền bí</option>
+              <option value="Kinh dị tâm lý">😱 Kinh dị tâm lý</option>
               <option value="Linh dị thám tử">👁️ Linh dị / Thám tử</option>
               <option value="Zombie tận thế">☣️ Zombie / Tận thế</option>
               <option value="Quỷ dị dân gian">🦊 Quỷ dị / Dân gian</option>
+              <option value="Thriller giật gân">🔪 Thriller / Giật gân</option>
             </optgroup>
             <optgroup label="─── Khoa học / Tương lai ───">
-              <option value="Khoa học viễn tưởng">🚀 Khoa học viễn tưởng</option>
+              <option value="Sci-Fi cứng">🚀 Sci-Fi cứng</option>
+              <option value="Khoa học viễn tưởng">🌌 Khoa học viễn tưởng</option>
               <option value="Cyberpunk">💻 Cyberpunk / Cơ giáp</option>
               <option value="Tận thế sinh tồn">🌍 Tận thế / Sinh tồn</option>
+            </optgroup>
+            <optgroup label="─── Phong cách đặc biệt ───">
+              <option value="Hài hước">😄 Hài hước / Hài nhẹ nhàng</option>
+              <option value="Văn học nghệ thuật">📚 Văn học / Nghệ thuật</option>
+              <option value="Phiêu lưu hào hùng">⚡ Phiêu lưu / Hào hùng</option>
+              <option value="Trinh thám">🧩 Trinh thám / Suy luận</option>
+              <option value="Tâm lý nhân vật">🧠 Tâm lý / Nhân vật sâu sắc</option>
             </optgroup>
           </select>
         </div>
@@ -1410,7 +1421,7 @@ let currentUser = null;
             <span class="ai-icon">✨</span>
             <span class="ai-label"><strong>AI Gợi ý nhân vật</strong> — dựa vào thể loại & cốt truyện đã nhập</span>
             <div style="display:flex;gap:.35rem;flex-wrap:wrap">
-              <button class="btn-ai" id="btn-ai-main-char" onclick="aiSuggestMainChar()">👤 Gợi ý NV chính</button>
+              <button class="btn-ai" id="btn-ai-main-char" onclick="openMainCharModal()">👤 Gợi ý NV chính</button>
               <button class="btn-ai" id="btn-ai-sec-char" onclick="aiSuggestSecChar()">👥 Gợi ý NV phụ</button>
               <button class="btn-ai" id="btn-ai-all-chars" onclick="aiSuggestAllChars()">🎭 Gợi ý toàn bộ dàn nhân vật</button>
             </div>
@@ -1508,6 +1519,7 @@ let currentUser = null;
 
         <!-- ── CỐT TRUYỆN TAB ── -->
         <div class="btab-panel" id="btab-plot">
+          <div id="plot-lock-hint" style="display:none;font-size:.78rem;color:#856404;background:#fff3cd;border-radius:5px;padding:.38rem .65rem;margin-bottom:.55rem;"></div>
           <!-- AI Suggest bar -->
           <div class="ai-suggest-bar">
             <span class="ai-icon">✨</span>
@@ -1635,8 +1647,10 @@ let currentUser = null;
       <div class="btn-row">
         <button class="btn btn-ghost" id="btn-gen-outline" onclick="generateOutline()">🗺️ Tạo dàn ý trước</button>
         <button class="btn btn-primary" id="btn-start-create" onclick="startCreation()">▶ Bắt đầu viết</button>
+        <button class="btn btn-ghost" id="btn-ai-full-framework" onclick="aiGenerateFullFramework()" title="AI tự động tạo nhân vật + thế giới + cốt truyện từ tên & thể loại">🚀 AI Tạo khung truyện</button>
         <button class="btn btn-danger" id="btn-stop-create" style="display:none" onclick="stopGeneration()">⏹ Dừng</button>
       </div>
+      <div id="write-readiness-hint" style="font-size:.75rem;color:var(--mist);margin-top:.3rem;"></div>
 
       <!-- Outline section -->
       <div id="outline-section" style="display:none; margin-top:1rem;">
@@ -2048,18 +2062,35 @@ let currentUser = null;
     <!-- ═══ SETTINGS ═══ -->
     <div class="panel" id="tab-settings">
       <div class="page-title"><span class="icon">⚙️</span> Cài đặt hệ thống</div>
-      <div class="card">
-        <div class="card-title">🔑 API Key (Anthropic Claude)</div>
-        <div class="key-row">
-          <input id="api-key-input" type="password" placeholder="sk-ant-api03-...">
-          <button class="btn btn-secondary" onclick="toggleKey()">👁</button>
-          <button class="btn btn-primary" onclick="saveKey()">💾 Lưu</button>
+      <div class="card" id="api-key-card">
+        <div class="card-title">🔑 Kết nối AI</div>
+
+        <!-- Shown when logged in via Supabase -->
+        <div id="api-key-section-logged-in" style="display:none;">
+          <div style="display:flex;align-items:center;gap:.7rem;padding:.6rem .9rem;background:rgba(92,184,92,.08);border:1px solid rgba(92,184,92,.25);border-radius:7px;margin-bottom:.75rem;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e;flex-shrink:0;"></div>
+            <div>
+              <div style="font-weight:600;font-size:.88rem;color:#155724;">Edge Function đang hoạt động</div>
+              <div style="font-size:.75rem;color:var(--mist);margin-top:.1rem;">API key Anthropic được quản lý an toàn trên server — bạn không cần nhập key.</div>
+            </div>
+          </div>
+          <button class="btn btn-ghost" onclick="testEdgeFunction()" id="btn-test-edge">🔌 Kiểm tra kết nối Edge Function</button>
+          <div id="api-test-result" style="margin-top:.6rem;font-size:.85rem;"></div>
         </div>
-        <p class="hint" style="margin-top:.5rem;">Key được lưu trên trình duyệt của bạn (localStorage), không gửi đến máy chủ nào ngoài Anthropic.</p>
-        <div class="btn-row" style="margin-top:.8rem;">
-          <button class="btn btn-ghost" onclick="testAPI()">🔌 Kiểm tra kết nối</button>
+
+        <!-- Shown when NOT logged in -->
+        <div id="api-key-section-normal">
+          <div class="key-row">
+            <input id="api-key-input" type="password" placeholder="sk-ant-api03-...">
+            <button class="btn btn-secondary" onclick="toggleKey()">👁</button>
+            <button class="btn btn-primary" onclick="saveKey()">💾 Lưu</button>
+          </div>
+          <p class="hint" style="margin-top:.5rem;">Key được lưu trên trình duyệt của bạn, không gửi đến máy chủ nào ngoài Anthropic.</p>
+          <div class="btn-row" style="margin-top:.8rem;">
+            <button class="btn btn-ghost" onclick="testAPI()">🔌 Kiểm tra kết nối</button>
+          </div>
+          <div id="api-test-result-local" style="margin-top:.6rem;font-size:.85rem;"></div>
         </div>
-        <div id="api-test-result" style="margin-top:.6rem; font-size:.85rem;"></div>
       </div>
       <div class="card">
         <div class="card-title">🤖 Mô hình</div>
@@ -2124,6 +2155,9 @@ function setAuthError(id, msg) {
 }
 
 async function signInGoogle() {
+  // Google login always saves session for 3 days
+  if (typeof setRememberMe === 'function') setRememberMe(true);
+  if (typeof updateLastActive === 'function') updateLastActive();
   // Use current page URL as redirect (works on GitHub Pages, any host)
   const redirectTo = window.location.origin + window.location.pathname;
   const { error } = await sb.auth.signInWithOAuth({
@@ -2201,6 +2235,7 @@ async function onSignedIn(user) {
 
   // Update API status to show Edge Function mode
   checkAPIStatus();
+  updateSettingsAPICard();
 
   // Warm up Edge Function (reduce cold start for first AI call)
   fetch('https://mgjgtzvgwwsxhiioevox.supabase.co/functions/v1/claude-proxy', {
@@ -2394,6 +2429,11 @@ async function initSupabaseAuth() {
   // Listen for auth changes
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
+      // For Google OAuth redirects, set remember-me automatically
+      if (event === 'SIGNED_IN' && !localStorage.getItem('tinix_last_active')) {
+        if (typeof setRememberMe === 'function') setRememberMe(true);
+        if (typeof updateLastActive === 'function') updateLastActive();
+      }
       await onSignedIn(session.user);
     } else if (event === 'SIGNED_OUT') {
       currentUser = null;
@@ -2401,6 +2441,369 @@ async function initSupabaseAuth() {
       document.getElementById('user-menu').style.display = 'none';
     }
   });
+}
+
+// ═══════════════════════════════════════════
+//  WORKFLOW LOGIC — SMART UX REFACTOR
+// ═══════════════════════════════════════════
+
+// ── State validation ──────────────────────
+function hasMainChar() {
+  return mainChars.some(c => c.name && c.name.trim().length > 0);
+}
+function hasBackground() {
+  const world = document.getElementById('c-world')?.value.trim() || '';
+  const era   = document.getElementById('w-era')?.value.trim()   || '';
+  return world.length > 5 || era.length > 5;
+}
+function hasPlot() {
+  return (document.getElementById('c-plot')?.value.trim() || '').length > 10;
+}
+function hasTitle() {
+  return (document.getElementById('c-title')?.value.trim() || '').length > 0;
+}
+function hasGenre() {
+  return (document.getElementById('c-genre')?.value || '') !== '';
+}
+
+// ── Enable/Disable state update ───────────
+function updateWorkflowState() {
+  const gotMain  = hasMainChar();
+  const gotBg    = hasBackground();
+  const gotPlot  = hasPlot();
+  const gotTitle = hasTitle();
+  const gotGenre = hasGenre();
+
+  // 1. Secondary char button
+  const btnAddSec  = document.querySelector('[onclick="addSecondaryChar()"]');
+  const btnAiSec   = document.getElementById('btn-ai-sec-char');
+  const secSection = document.getElementById('secondary-chars-list')?.closest('.char-section');
+  if (btnAddSec) {
+    btnAddSec.disabled = !gotMain;
+    btnAddSec.title = gotMain ? '' : 'Cần tạo nhân vật chính trước';
+    btnAddSec.style.opacity = gotMain ? '' : '0.45';
+  }
+  if (btnAiSec) {
+    btnAiSec.disabled = !gotMain;
+    btnAiSec.style.opacity = gotMain ? '' : '0.45';
+    btnAiSec.title = gotMain ? '' : 'Cần tạo nhân vật chính trước';
+  }
+
+  // 2. Plot section — disable AI plot if no main char or background
+  const btnAiPlot = document.getElementById('btn-ai-plot');
+  const plotArea  = document.getElementById('c-plot');
+  const plotHint  = document.getElementById('plot-lock-hint');
+  const plotLocked = !gotMain || !gotBg;
+  if (btnAiPlot) {
+    btnAiPlot.disabled = plotLocked;
+    btnAiPlot.style.opacity = plotLocked ? '0.45' : '';
+    btnAiPlot.title = !gotMain ? 'Cần nhân vật chính trước' : !gotBg ? 'Cần bối cảnh thế giới trước' : '';
+  }
+  if (plotHint) {
+    plotHint.style.display = plotLocked ? 'block' : 'none';
+    plotHint.textContent = !gotMain ? '⚠️ Thêm nhân vật chính để mở khóa cốt truyện' : '⚠️ Thêm thế giới quan / bối cảnh để mở khóa cốt truyện';
+  }
+
+  // 3. Start writing button
+  const btnStart   = document.getElementById('btn-start-create');
+  const btnOutline = document.getElementById('btn-gen-outline');
+  const btnFromOut = document.getElementById('btn-write-from-outline');
+  const canStart   = gotTitle && gotGenre && gotMain;
+
+  [btnStart, btnOutline, btnFromOut].forEach(btn => {
+    if (!btn) return;
+    btn.disabled = !canStart;
+    btn.style.opacity = canStart ? '' : '0.5';
+    btn.title = !gotTitle ? 'Cần nhập tên truyện' : !gotGenre ? 'Cần chọn thể loại' : !gotMain ? 'Cần có ít nhất 1 nhân vật chính' : '';
+  });
+
+  // Update hint below buttons
+  const writeHint = document.getElementById('write-readiness-hint');
+  if (writeHint) {
+    if (canStart) {
+      writeHint.textContent = '✅ Sẵn sàng viết!';
+      writeHint.style.color = '#155724';
+    } else {
+      const missing = [];
+      if (!gotTitle) missing.push('tên truyện');
+      if (!gotGenre) missing.push('thể loại');
+      if (!gotMain)  missing.push('nhân vật chính');
+      writeHint.textContent = 'Còn thiếu: ' + missing.join(', ');
+      writeHint.style.color = 'var(--mist)';
+    }
+  }
+}
+
+// ── Hook state update into all relevant actions ───
+function _hookWorkflowUpdates() {
+  // Watch title, genre inputs
+  ['c-title','c-genre','w-era','w-place','w-rules'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateWorkflowState);
+    if (el) el.addEventListener('change', updateWorkflowState);
+  });
+
+  // MutationObserver on main-chars-list to detect changes
+  const mainList = document.getElementById('main-chars-list');
+  if (mainList) {
+    new MutationObserver(updateWorkflowState).observe(mainList, { childList: true, subtree: true });
+  }
+  const worldEl = document.getElementById('c-world');
+  if (worldEl) worldEl.addEventListener('input', updateWorkflowState);
+
+  updateWorkflowState(); // Initial run
+}
+
+// ── Override addSecondaryChar with validation ─────
+const _origAddSecChar = window.addSecondaryChar;
+window.addSecondaryChar = function() {
+  if (!hasMainChar()) {
+    toast('⚠️ Cần tạo nhân vật chính trước!');
+    // Highlight main char section
+    const mainSec = document.getElementById('main-chars-list')?.closest('.char-section');
+    if (mainSec) {
+      mainSec.style.outline = '2px solid var(--gold)';
+      setTimeout(() => mainSec.style.outline = '', 1800);
+    }
+    return;
+  }
+  if (_origAddSecChar) _origAddSecChar();
+  else {
+    const id = ++charIdCounter;
+    secChars.push({ id, name:'', gender:'', age:'', charType:'', personality:'', relationTo:'', relationType:'' });
+    renderSecChars();
+    triggerAutosave();
+  }
+};
+
+// ── Main char popup modal ─────────────────────────
+function openMainCharModal() {
+  const modal = document.getElementById('main-char-modal');
+  if (modal) {
+    // Reset fields
+    document.getElementById('mcm-count').value = '1';
+    document.getElementById('mcm-gender').value = 'nữ';
+    document.getElementById('mcm-age').value = '';
+    document.getElementById('mcm-desc').value = '';
+    document.getElementById('mcm-error').style.display = 'none';
+    modal.classList.add('show');
+    setTimeout(() => document.getElementById('mcm-desc').focus(), 100);
+  }
+}
+function closeMainCharModal() {
+  document.getElementById('main-char-modal')?.classList.remove('show');
+}
+
+async function submitMainCharModal() {
+  const count  = parseInt(document.getElementById('mcm-count').value) || 1;
+  const gender = document.getElementById('mcm-gender').value;
+  const age    = document.getElementById('mcm-age').value.trim();
+  const desc   = document.getElementById('mcm-desc').value.trim();
+  const errEl  = document.getElementById('mcm-error');
+
+  if (!desc) {
+    errEl.textContent = '⚠️ Nhập mô tả ý tưởng nhân vật';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('mcm-submit');
+  btn.disabled = true; btn.textContent = '⏳ AI đang tạo...';
+  errEl.style.display = 'none';
+
+  const genre = document.getElementById('c-genre')?.value || '';
+  const tone  = document.getElementById('c-tone-custom')?.value.trim() || '';
+  const plot  = document.getElementById('c-plot')?.value.trim().slice(0,100) || '';
+
+  const prompt =
+    `Tạo ${count} nhân vật chính cho truyện ${genre}${tone?', tone '+tone:''}.${plot?'\\nCốt truyện: '+plot:''}
+Yêu cầu: ${gender}${age?', '+age+' tuổi':''}, ý tưởng: ${desc}
+
+Với mỗi nhân vật, trả lời CHÍNH XÁC theo format dưới (không thêm gì khác):
+===NHÂN VẬT===
+Tên: [tên]
+Giới tính: [nam/nữ]
+Tuổi: [số]
+Thân phận/Vai trò: [mô tả ngắn]
+Tính cách: [3-4 đặc điểm]
+Thân thế & Quá khứ: [2-3 câu]
+Mục tiêu/Động lực: [1-2 câu]
+Bí mật/Điểm yếu: [1-2 câu]
+===HẾT===
+Tiếng Việt tự nhiên.`;
+
+  try {
+    const result = await callClaude(prompt, 900, 0.85);
+    closeMainCharModal();
+    await autoFillMainChars(result, count);
+    toast('✅ Đã tạo ' + count + ' nhân vật chính!');
+    updateWorkflowState();
+  } catch(e) {
+    errEl.textContent = '❌ Lỗi: ' + e.message;
+    errEl.style.display = 'block';
+  }
+  btn.disabled = false; btn.textContent = '✨ AI Tạo nhân vật';
+}
+
+async function autoFillMainChars(aiText, count) {
+  // Parse ===NHÂN VẬT=== blocks
+  const blocks = aiText.split('===NHÂN VẬT===').slice(1);
+
+  // Reset main chars
+  mainChars = [];
+  charIdCounter = 0;
+
+  blocks.slice(0, count).forEach(block => {
+    const id = ++charIdCounter;
+    const get = (key) => {
+      const re = new RegExp(key + ':\\s*(.+)', 'i');
+      const m = block.match(re);
+      return m ? m[1].trim() : '';
+    };
+    mainChars.push({
+      id,
+      name:        get('Tên'),
+      gender:      get('Giới tính'),
+      age:         get('Tuổi'),
+      role:        get('Thân phận/Vai trò'),
+      personality: get('Tính cách'),
+      background:  get('Thân thế & Quá khứ'),
+      goal:        get('Mục tiêu/Động lực'),
+      secret:      get('Bí mật/Điểm yếu'),
+    });
+  });
+
+  renderMainChars();
+  updateBtnAddMain();
+  updateCharsPreview();
+  triggerAutosave();
+
+  // Expand first char card
+  setTimeout(() => {
+    const firstCard = document.querySelector('.char-body');
+    if (firstCard) firstCard.classList.add('open');
+    const firstHdr = document.querySelector('.char-header');
+    if (firstHdr) firstHdr.classList.add('open');
+  }, 100);
+}
+
+// ── AI Full Framework Generator ───────────────────
+async function aiGenerateFullFramework() {
+  const title = document.getElementById('c-title')?.value.trim();
+  const genre = document.getElementById('c-genre')?.value;
+  if (!title) { toast('⚠️ Nhập tên truyện trước!'); return; }
+  if (!genre) { toast('⚠️ Chọn thể loại trước!'); return; }
+
+  const btn = document.getElementById('btn-ai-full-framework');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang tạo khung...'; }
+
+  const tone  = document.getElementById('c-tone-custom')?.value.trim() || '';
+  const sub   = getSubGenreText ? getSubGenreText() : '';
+  const chaps = document.getElementById('c-chapters')?.value || 20;
+
+  const prompt =
+    `Xây dựng khung hoàn chỉnh cho tiểu thuyết "${title}" (${genre}${sub?'+'+sub:''}${tone?', tone: '+tone:''}, ${chaps} chương).
+
+Trả lời CHÍNH XÁC theo format (không thêm gì khác):
+
+===NHÂN VẬT CHÍNH===
+Tên: [tên]
+Giới tính: [nam/nữ]
+Tuổi: [số]
+Thân phận/Vai trò: [ngắn gọn]
+Tính cách: [3-4 đặc điểm]
+Thân thế & Quá khứ: [2-3 câu]
+Mục tiêu/Động lực: [1-2 câu]
+Bí mật/Điểm yếu: [1-2 câu]
+===HẾT NV CHÍNH===
+
+===THẾ GIỚI QUAN===
+Thời đại/Bối cảnh: [1-2 câu]
+Địa điểm chính: [ngắn gọn]
+Quy tắc/Hệ thống: [2-3 câu đặc trưng thế giới]
+Phe phái/Tổ chức: [tên + vai trò ngắn]
+Không khí/Vibe: [1 câu]
+===HẾT THẾ GIỚI===
+
+===CỐT TRUYỆN===
+Xung đột chính: [1-2 câu]
+Mở đầu: [2-3 câu sự kiện khởi động]
+Kết thúc dự kiến: [1-2 câu]
+Twist/Bất ngờ: [1-2 câu]
+Chủ đề/Thông điệp: [1 câu]
+===HẾT CỐT TRUYỆN===
+
+Tiếng Việt, sáng tạo, phù hợp thể loại ${genre}.`;
+
+  try {
+    const result = await callClaude(prompt, 1500, 0.85);
+    autoFillFramework(result);
+    toast('✅ Đã tạo khung truyện! Kiểm tra và chỉnh sửa nếu cần.', 4000);
+    updateWorkflowState();
+  } catch(e) {
+    toast('❌ Lỗi: ' + e.message, 4000);
+  }
+  if (btn) { btn.disabled = false; btn.textContent = '🚀 AI Tạo khung truyện'; }
+}
+
+function autoFillFramework(aiText) {
+  // Parse main char
+  const charBlock = aiText.match(/===NHÂN VẬT CHÍNH===([\s\S]*?)===HẾT NV CHÍNH===/);
+  if (charBlock) autoFillMainChars(charBlock[0].replace('===NHÂN VẬT CHÍNH===','===NHÂN VẬT==='), 1);
+
+  // Parse world
+  const worldBlock = aiText.match(/===THẾ GIỚI QUAN===([\s\S]*?)===HẾT THẾ GIỚI===/);
+  if (worldBlock) {
+    const wb = worldBlock[1];
+    const getW = (key) => { const m = wb.match(new RegExp(key+':\\s*(.+)', 'i')); return m?m[1].trim():''; };
+    const era     = getW('Thời đại/Bối cảnh');
+    const place   = getW('Địa điểm chính');
+    const rules   = getW('Quy tắc/Hệ thống');
+    const fac     = getW('Phe phái/Tổ chức');
+    const vibe    = getW('Không khí/Vibe');
+    const eraEl   = document.getElementById('w-era');
+    const placeEl = document.getElementById('w-place');
+    const ruleEl  = document.getElementById('w-rules');
+    const facEl   = document.getElementById('w-factions');
+    const vibeEl  = document.getElementById('w-vibe');
+    if (eraEl && era)   eraEl.value   = era;
+    if (placeEl && place) placeEl.value = place;
+    if (ruleEl && rules)  ruleEl.value  = rules;
+    if (facEl && fac)     facEl.value   = fac;
+    if (vibeEl && vibe)   vibeEl.value  = vibe;
+    // Also set c-world summary
+    const worldEl = document.getElementById('c-world');
+    if (worldEl) worldEl.value = [era, place, rules, fac, vibe].filter(Boolean).join('\n');
+  }
+
+  // Parse plot
+  const plotBlock = aiText.match(/===CỐT TRUYỆN===([\s\S]*?)===HẾT CỐT TRUYỆN===/);
+  if (plotBlock) {
+    const pb = plotBlock[1];
+    const getP = (key) => { const m = pb.match(new RegExp(key+':\\s*(.+)', 'i')); return m?m[1].trim():''; };
+    const conflict = getP('Xung đột chính');
+    const start    = getP('Mở đầu');
+    const end      = getP('Kết thúc dự kiến');
+    const twist    = getP('Twist/Bất ngờ');
+    const theme    = getP('Chủ đề/Thông điệp');
+    const conEl = document.getElementById('p-conflict');
+    const staEl = document.getElementById('p-start');
+    const endEl = document.getElementById('p-end');
+    const twiEl = document.getElementById('p-twists');
+    const themEl = document.getElementById('p-theme');
+    if (conEl && conflict) conEl.value = conflict;
+    if (staEl && start)    staEl.value = start;
+    if (endEl && end)      endEl.value = end;
+    if (twiEl && twist)    twiEl.value = twist;
+    if (themEl && theme)   themEl.value = theme;
+    // Also set c-plot summary
+    const plotEl = document.getElementById('c-plot');
+    if (plotEl) plotEl.value = [conflict, start, end, twist].filter(Boolean).join('\n');
+    triggerAutosave();
+  }
+
+  // Switch to char tab to show result
+  document.querySelector('[data-btab="char"]')?.click();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -2891,20 +3294,58 @@ function initAutosave() {
 }
 
 async function testAPI() {
-  const el = document.getElementById('api-test-result');
+  const el = document.getElementById('api-test-result-local') || document.getElementById('api-test-result');
+  if (!el) return;
   el.innerHTML = '<span class="spinner"></span> Đang kiểm tra...';
   try {
-    const res = await callClaude('Trả lời đúng 3 từ: "Kết nối thành công"', 20, 0.1);
-    el.innerHTML = `<span style="color:#155724;">✅ ${res}</span>`;
-    toast('✅ Kết nối API thành công!');
+    const res = await callClaude('Trả lời 2 từ tiếng Việt: xác nhận thành công', 30, 0.1);
+    el.innerHTML = '<span style="color:#155724;">✅ ' + (res || 'Kết nối thành công') + '</span>';
+    toast('✅ Kết nối thành công!');
   } catch(e) {
-    el.innerHTML = `<span style="color:#721c24;">❌ ${e.message}</span>`;
+    el.innerHTML = '<span style="color:#721c24;">❌ ' + e.message + '</span>';
   }
+}
+
+async function testEdgeFunction() {
+  const el = document.getElementById('api-test-result');
+  const btn = document.getElementById('btn-test-edge');
+  if (!el) return;
+  el.innerHTML = '<span class="spinner"></span> Đang kiểm tra Edge Function...';
+  if (btn) btn.disabled = true;
+  try {
+    const token = await getAuthToken();
+    const res = await fetch(EDGE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ prompt: 'Trả lời 2 từ: xác nhận', maxTokens: 30, temperature: 0.1 })
+    });
+    const data = await res.json();
+    if (res.ok && data.result) {
+      el.innerHTML = '<span style="color:#155724;">✅ Edge Function OK — ' + (data.result || 'Kết nối thành công') + '</span>';
+      if (data.usage) el.innerHTML += '<br><span style="font-size:.75rem;color:var(--mist);">Quota hôm nay: ' + data.usage.used_today + '/' + data.usage.limit + ' tokens</span>';
+      toast('✅ Edge Function đang hoạt động!');
+    } else if (data.error === 'quota_exceeded') {
+      el.innerHTML = '<span style="color:#856404;">⚠️ Hết quota hôm nay (' + data.used + '/' + data.limit + ' tokens)</span>';
+    } else {
+      el.innerHTML = '<span style="color:#721c24;">❌ ' + (data.error || 'Lỗi không xác định') + '</span>';
+    }
+  } catch(e) {
+    el.innerHTML = '<span style="color:#721c24;">❌ ' + e.message + '</span>';
+  }
+  if (btn) btn.disabled = false;
 }
 
 // ═══════════════════════════════════════════
 //  NAVIGATION
 // ═══════════════════════════════════════════
+
+function updateSettingsAPICard() {
+  const loggedIn = !!currentUser;
+  const normal   = document.getElementById('api-key-section-normal');
+  const loggedInEl = document.getElementById('api-key-section-logged-in');
+  if (normal)    normal.style.display    = loggedIn ? 'none'  : 'block';
+  if (loggedInEl) loggedInEl.style.display = loggedIn ? 'block' : 'none';
+}
 function initNav() {
   document.querySelectorAll('.nav-item[data-tab]').forEach(el => {
     el.addEventListener('click', () => {
@@ -2915,6 +3356,7 @@ function initNav() {
       if (el.dataset.tab === 'projects') renderProjects();
       if (el.dataset.tab === 'export') refreshExpProjects();
       if (el.dataset.tab === 'continue') renderContinueProjects();
+      if (el.dataset.tab === 'settings') updateSettingsAPICard();
     });
   });
 }
@@ -3123,6 +3565,7 @@ function updateBtnAddMain() {
   const btn = document.getElementById('btn-add-main');
   btn.disabled = mainChars.length >= 2;
   btn.textContent = mainChars.length >= 2 ? '✓ Đã đủ (2/2)' : '＋ Thêm (tối đa 2)';
+  updateWorkflowState();
 }
 
 function renderMainChars() {
@@ -3378,6 +3821,7 @@ function buildWorldText() {
   if (extra) parts.push(extra);
   const txt = parts.join('\n');
   document.getElementById('c-world').value = txt;
+  updateWorkflowState();
   return txt;
 }
 
@@ -3767,47 +4211,22 @@ async function runAiSuggest(btnId, resultId, contentId, prompt) {
 }
 
 async function aiSuggestMainChar() {
-  const { genre, sub, plot, world, tone } = getContext();
-  if (!genre) { toast('\u26a0\ufe0f H\xe3y ch\u1ecdn th\u1ec3 lo\u1ea1i tr\u01b0\u1edbc!'); return; }
+  const { genre, plot, world, tone } = getContext();
+  if (!genre) { toast('⚠️ Hãy chọn thể loại trước!'); return; }
   const existingNames = mainChars.map(c => c.name).filter(Boolean).join(', ');
-  const prompt = `Chuy\xean gia s\xe1ng t\xe1c ti\u1ec3u thuy\u1ebft ${genre}${sub?' + '+sub:''}${tone?', tone '+tone:''}.
-${existingNames?'NV ch\xednh hi\u1ec7n c\xf3: '+existingNames:''}
-${world?'Th\u1ebf gi\u1edbi: '+world.slice(0,120):''}
-${plot?'C\u1ed1t truy\u1ec7n: '+plot.slice(0,120):''}
-
-G\u1ee3i \xfd nh\xe2n v\u1eadt ch\xednh ${existingNames?'th\u1ee9 2':''} ph\xf9 h\u1ee3p ${genre}${tone?', tone '+tone:''}:
-T\xean: (ph\xf9 h\u1ee3p th\u1ec3 lo\u1ea1i, gi\u1edbi t\xednh r\xf5 r\xe0ng)
-Gi\u1edbi t\xednh & Tu\u1ed5i:
-Th\xe2n ph\u1eadn / Vai tr\xf2:
-T\xednh c\xe1ch: (3-5 \u0111\u1eb7c \u0111i\u1ec3m, c\xf3 m\xe2u thu\u1eabn n\u1ed9i t\xe2m, ph\xf9 h\u1ee3p tone)
-Th\xe2n th\u1ebf & Qu\xe1 kh\u1ee9:
-M\u1ee5c ti\xeau / \u0110\u1ed9ng l\u1ef1c c\u1ed1t l\xf5i:
-B\xed m\u1eadt / \u0110i\u1ec3m y\u1ebfu ch\xed m\u1ea1ng:
-
-S\xe1ng t\u1ea1o, tr\xe1nh khu\xf4n m\u1eabu. Ti\u1ebfng Vi\u1ec7t.`;
+  const prompt = `Gợi ý nhân vật chính cho truyện ${genre}${tone?', tone '+tone:''}.${plot?'\nCốt: '+plot.slice(0,80):''}${world?'\nThế giới: '+world.slice(0,60):''}${existingNames?'\nNV đã có: '+existingNames:''}
+Trả lời ngắn: Tên|Giới tính|Tuổi|Thân phận\nTính cách (3 đặc điểm)\nMục tiêu|Bí mật/Điểm yếu\nTiếng Việt.`;
   lastCharSuggest = await runAiSuggest('btn-ai-main-char', 'ai-result-chars', 'ai-result-chars-content', prompt);
 }
 
 async function aiSuggestSecChar() {
-  const { genre, sub, plot, tone } = getContext();
-  if (!genre) { toast('\u26a0\ufe0f H\xe3y ch\u1ecdn th\u1ec3 lo\u1ea1i tr\u01b0\u1edbc!'); return; }
-  const mainNames = mainChars.map(c => c.name||'NV ch\xednh').join(', ');
+  const { genre, plot, tone } = getContext();
+  if (!genre) { toast('⚠️ Hãy chọn thể loại trước!'); return; }
+  const mainNames = mainChars.map(c => c.name||'NV chính').join(', ');
   const existingSec = secChars.map(c => c.name).filter(Boolean).join(', ');
-  const prompt = `Chuy\xean gia s\xe1ng t\xe1c ti\u1ec3u thuy\u1ebft ${genre}${sub?' + '+sub:''}${tone?', tone '+tone:''}.
-NV ch\xednh: ${mainNames||'ch\u01b0a x\xe1c \u0111\u1ecbnh'}
-${existingSec?'NV ph\u1ee5 \u0111\xe3 c\xf3: '+existingSec:''}
-${plot?'C\u1ed1t truy\u1ec7n: '+plot.slice(0,120):''}
-
-G\u1ee3i \xfd 2-3 nh\xe2n v\u1eadt ph\u1ee5 \u0111\xe1ng nh\u1edb, ph\xf9 h\u1ee3p ${genre}${tone?', tone '+tone:''}:
-M\u1ed7i nh\xe2n v\u1eadt:
-- T\xean & Gi\u1edbi t\xednh
-- Lo\u1ea1i: T\xecnh nh\xe2n / B\u1ea1n th\xe2n / Ph\u1ea3n di\u1ec7n / Ng\u01b0\u1eddi th\xe2n / Mentor...
-- Quan h\u1ec7 c\u1ee5 th\u1ec3 v\u1edbi NV ch\xednh n\xe0o
-- T\xednh c\xe1ch (2-3 \u0111\u1eb7c \u0111i\u1ec3m)
-- Vai tr\xf2 trong c\u1ed1t truy\u1ec7n
-- M\u1ed9t \u0111i\u1ec3m b\xed \u1ea9n ho\u1eb7c arc ri\xeang
-
-T\u1ea1o NV ph\u1ee5 c\xf3 \u0111\u1eddi s\u1ed1ng ri\xeang. Ti\u1ebfng Vi\u1ec7t.`;
+  const prompt = `Gợi ý 2-3 nhân vật phụ cho truyện ${genre}${tone?', tone '+tone:''}.${plot?'\nCốt: '+plot.slice(0,80):''}
+NV chính: ${mainNames||'chưa xác định'}${existingSec?'\nNV phụ đã có: '+existingSec:''}
+Mỗi NV: Tên|Loại quan hệ|Tính cách ngắn|Vai trò\nTiếng Việt.`;
   lastCharSuggest = await runAiSuggest('btn-ai-sec-char', 'ai-result-chars', 'ai-result-chars-content', prompt);
 }
 
@@ -4481,7 +4900,18 @@ const EDGE_URL = 'https://mgjgtzvgwwsxhiioevox.supabase.co/functions/v1/claude-p
 
 async function getAuthToken() {
   const { data: { session } } = await sb.auth.getSession();
-  return session?.access_token || null;
+  if (session?.access_token) {
+    const exp = (session.expires_at||0)*1000;
+    if (!exp || Date.now() < exp - 60000) return session.access_token;
+  }
+  const { data: rd } = await sb.auth.refreshSession();
+  if (rd?.session?.access_token) return rd.session.access_token;
+  currentUser = null;
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('user-menu').style.display = 'none';
+  const e2 = document.getElementById('auth-error');
+  if (e2) { e2.textContent = 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.'; e2.classList.add('show'); }
+  throw new Error('Phiên hết hạn. Đăng nhập lại.');
 }
 
 function showQuotaExceeded(info) {
@@ -5133,6 +5563,7 @@ CHỈ xuất nội dung chương, không tiêu đề, không ghi chú.`;
     proj.content[ch.num] = { title: ch.title, text: chapterText };
     proj.completed = Object.keys(proj.content).length;
     saveProjects();
+    autoSummarizeChapter(proj, ch, chapterText).catch(()=>{});
     setChStatus('done', '\u2713 \u0110\xe3 vi\u1ebft');
     document.getElementById('ch-write-hint').textContent = `\u2705 Ch\u01b0\u01a1ng ${ch.num} xong! Ch\u1ec9nh s\u1eeda n\u1ebfu c\u1ea7n r\u1ed3i ti\u1ebfp t\u1ee5c.`;
     renderChActions(ch, true); renderChapterList(); updateCwProgress();
@@ -5777,6 +6208,20 @@ function toggleManualContinue() {
   arrow.textContent = open ? '▼' : '▲';
 }
 
+
+// AUTO SUMMARIZE
+async function autoSummarizeChapter(proj, ch, text) {
+  if (!proj||!ch||!text||!currentUser) return;
+  try {
+    const p = 'Tóm tắt 80-100 từ tiếng Việt cho chương '+ch.num+' cầa truyện '+proj.title+'. Ỷu tiên: sự kiện chính, nhân vật, trạng thái cuối. Nội dung:\n'+text.slice(0,2000)+'\nChỉ xuất tóm tắt.';
+    const s = await callClaude(p, 200, 0.3);
+    if (!s) return;
+    if (!proj.chapter_summaries) proj.chapter_summaries = {};
+    proj.chapter_summaries[ch.num] = s.trim();
+    saveProjects();
+    if (currentUser) await sb.from('projects').update({chapter_summaries:proj.chapter_summaries}).eq('id',proj._dbId||proj.id).eq('user_id',currentUser.id);
+  } catch(e) { console.warn('Summary fail:',e.message); }
+}
 function copyCurrentChapter() {
   const text = document.getElementById('ch-output').textContent;
   if (!text || text.includes('xu\u1ea5t hi\u1ec7n')) { toast('\u26a0\ufe0f Ch\u01b0a c\xf3 n\u1ed9i dung!'); return; }
@@ -6371,6 +6816,10 @@ function toast(msg, duration=3000) {
       <input type="email" id="auth-email" placeholder="Email" autocomplete="email">
       <input type="password" id="auth-password" placeholder="Mật khẩu" autocomplete="current-password">
       <div class="auth-error" id="auth-error"></div>
+      <label style="display:flex;align-items:center;gap:.5rem;font-size:.81rem;color:var(--mist);cursor:pointer;user-select:none;font-weight:400;text-transform:none;letter-spacing:0;">
+        <input type="checkbox" id="remember-me" style="width:15px;height:15px;cursor:pointer;accent-color:var(--gold);">
+        Lưu đăng nhập
+      </label>
       <button class="btn-auth-primary" id="btn-auth-submit" onclick="signInEmail()">Đăng nhập</button>
       <button style="background:none;border:none;color:var(--mist);font-size:.78rem;cursor:pointer;text-align:center;margin-top:.2rem;" onclick="forgotPassword()">Quên mật khẩu?</button>
     </div>
@@ -6403,6 +6852,46 @@ function toast(msg, duration=3000) {
     </div>
     <div style="font-size:.72rem;color:var(--mist);text-align:center;margin-top:.75rem;">
       Tính năng nâng cấp tài khoản sẽ sớm có mặt
+    </div>
+  </div>
+</div>
+
+<!-- Main Char Modal -->
+<div class="modal-overlay" id="main-char-modal" onclick="if(event.target===this)closeMainCharModal()">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-icon">👤</div>
+    <div class="modal-title">Tạo nhân vật chính với AI</div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:.6rem;">
+        <label>Số lượng nhân vật chính</label>
+        <select id="mcm-count" style="margin-top:.2rem;">
+          <option value="1">1 nhân vật</option>
+          <option value="2">2 nhân vật</option>
+        </select>
+      </div>
+      <div class="grid2" style="gap:.5rem;margin-bottom:.6rem;">
+        <div class="form-group">
+          <label>Giới tính</label>
+          <select id="mcm-gender">
+            <option value="nữ">Nữ</option>
+            <option value="nam">Nam</option>
+            <option value="nam và nữ">Nam + Nữ</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Độ tuổi</label>
+          <input id="mcm-age" type="text" placeholder="VD: 20, 18-22...">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:.5rem;">
+        <label>Mô tả ý tưởng nhân vật *</label>
+        <textarea id="mcm-desc" style="min-height:72px;" placeholder="VD: lạnh lùng bề ngoài, ẩn chứa quá khứ đau thương, bị phản bội bởi người thân..."></textarea>
+      </div>
+      <div id="mcm-error" style="display:none;background:#fdecea;color:var(--rust);border-radius:5px;padding:.38rem .65rem;font-size:.82rem;margin-bottom:.4rem;"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-primary" id="mcm-submit" onclick="submitMainCharModal()">✨ AI Tạo nhân vật</button>
+      <button class="btn btn-ghost" onclick="closeMainCharModal()">Huỷ</button>
     </div>
   </div>
 </div>
