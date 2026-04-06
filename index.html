@@ -2930,8 +2930,9 @@ function loadSettings() {
 
   // Migrate old model names
   const modelMap = {
+    'claude-sonnet-4-5':          'claude-sonnet-4-6',
+    'claude-sonnet-4-5-20251101': 'claude-sonnet-4-6',
     'claude-sonnet-4-6':          'claude-sonnet-4-6',
-    'claude-sonnet-4-6': 'claude-sonnet-4-6',
     'claude-opus-4-5':            'claude-opus-4-6',
     'claude-opus-4-5-20251101':   'claude-opus-4-6',
     'claude-haiku-4-5':           'claude-haiku-4-5-20251001',
@@ -4677,7 +4678,10 @@ async function callClaude(prompt, maxTokens, temp) {
 const token = await getAuthToken();
 if (!token) throw new Error('Chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.');
 
-const model = settings.model || 'claude-sonnet-4-6';
+// Always validate model name before calling API
+const VALID_MODELS = ['claude-sonnet-4-6','claude-opus-4-6','claude-haiku-4-5-20251001'];
+let model = settings.model || 'claude-sonnet-4-6';
+if (!VALID_MODELS.includes(model)) { model = 'claude-sonnet-4-6'; settings.model = model; }
 const temperature = Math.min(1.0, Math.max(0.0, temp !== undefined ? parseFloat(temp) : (parseFloat(settings.temperature) || 0.8)));
 
 const response = await fetch(EDGE_URL, {
