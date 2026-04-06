@@ -2123,9 +2123,18 @@ let settings = JSON.parse(localStorage.getItem('tinix_settings') || '{}');
 
 // ── Migrate old model names immediately on load ───────────────────────────────
 (function migrateModelName() {
+  // Also clear any cached bad model from localStorage directly
+  try {
+    const s = JSON.parse(localStorage.getItem('tinix_settings') || '{}');
+    if (s.model && s.model.includes('4-5') && !s.model.includes('20251001')) {
+      s.model = 'claude-sonnet-4-6';
+      localStorage.setItem('tinix_settings', JSON.stringify(s));
+    }
+  } catch(e) {}
   const OLD_TO_NEW = {
+    'claude-sonnet-4-5':          'claude-sonnet-4-6',
+    'claude-sonnet-4-5-20251101': 'claude-sonnet-4-6',
     'claude-sonnet-4-6':          'claude-sonnet-4-6',
-    'claude-sonnet-4-6': 'claude-sonnet-4-6',
     'claude-opus-4-5':            'claude-opus-4-6',
     'claude-opus-4-5-20251101':   'claude-opus-4-6',
     'claude-haiku-4-5':           'claude-haiku-4-5-20251001',
@@ -6498,7 +6507,7 @@ toast._t = setTimeout(() => el.classList.remove('show'), duration);
 <!-- Main Char Modal -->
 
 <div class="modal-overlay" id="main-char-modal" onclick="if(event.target===this)closeMainCharModal()">
-  <div class="modal-box" style="max-width:500px;">
+  <div class="modal-box" style="max-width:500px;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;">
     <div class="modal-icon">👤</div>
     <div class="modal-title">Tạo nhân vật chính với AI</div>
     <div class="modal-body">
