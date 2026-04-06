@@ -4026,7 +4026,61 @@ lastCharSuggest = await runAiSuggest('btn-ai-all-chars', 'ai-result-chars', 'ai-
 }
 
 function applyCharSuggest() {
-toast('\ud83d\udca1 \u0110\u1ecdc g\u1ee3i \xfd v\xe0 nh\u1eadp v\xe0o t\u1eebng \xf4 nh\xe2n v\u1eadt!', 4000);
+  if (!lastCharSuggest) { toast('⚠️ Chưa có gợi ý!'); return; }
+  const text = lastCharSuggest;
+  // Parse each NV block
+  const blocks = text.split(/(?=(?:NV|Nhân vật|【|\d+\.|---)[\s\S])/i).filter(b => b.trim());
+  
+  // Helper: extract value after a keyword
+  const getVal = (block, ...keys) => {
+    for (const key of keys) {
+      const re = new RegExp(key + '[\\s]*[:\uff1a|]\\s*(.+)', 'i');
+      const m = block.match(re);
+      if (m) return m[1].replace(/\[|\]/g, '').trim();
+    }
+    return '';
+  };
+
+  // Try to fill first char slot (main char 1)
+  if (mainChars.length === 0) addMainChar();
+  
+  const allText = text;
+  // Find sections by common labels
+  const getField = (...keys) => {
+    for (const key of keys) {
+      const re = new RegExp(key + '[\\s]*[:\uff1a|\\-]\\s*([^\\n]+)', 'i');
+      const m = allText.match(re);
+      if (m) return m[1].replace(/\[|\]/g, '').trim();
+    }
+    return '';
+  };
+
+  const name        = getField('Tên', 'Name');
+  const gender      = getField('Giới tính', 'Gender');
+  const age         = getField('Tuổi', 'Age');
+  const role        = getField('Thân phận', 'Vai trò', 'Role');
+  const personality = getField('Tính cách', 'Personality');
+  const background  = getField('Thân thế', 'Quá khứ', 'Background');
+  const goal        = getField('Mục tiêu', 'Động lực', 'Goal');
+  const secret      = getField('Bí mật', 'Điểm yếu', 'Secret');
+
+  // Fill into first main char
+  if (mainChars[0]) {
+    if (name)        { mainChars[0].name = name;               updateMainChar(mainChars[0].id, 'name', name); }
+    if (gender)      { mainChars[0].gender = gender;           updateMainChar(mainChars[0].id, 'gender', gender); }
+    if (age)         { mainChars[0].age = age;                 updateMainChar(mainChars[0].id, 'age', age); }
+    if (role)        { mainChars[0].role = role;               updateMainChar(mainChars[0].id, 'role', role); }
+    if (personality) { mainChars[0].personality = personality; updateMainChar(mainChars[0].id, 'personality', personality); }
+    if (background)  { mainChars[0].background = background;   updateMainChar(mainChars[0].id, 'background', background); }
+    if (goal)        { mainChars[0].goal = goal;               updateMainChar(mainChars[0].id, 'goal', goal); }
+    if (secret)      { mainChars[0].secret = secret;           updateMainChar(mainChars[0].id, 'secret', secret); }
+    renderMainChars();
+    updateCharsPreview();
+    triggerAutosave();
+    toast('✅ Đã điền nhân vật! Kiểm tra và chỉnh thêm.');
+  } else {
+    toast('⚠️ Không tìm thấy nhân vật để điền. Hãy thêm nhân vật trước.');
+  }
 }
 
 async function aiSuggestWorld(mode) {
@@ -4051,21 +4105,46 @@ lastWorldSuggest = await runAiSuggest(btnId, 'ai-result-world', 'ai-result-world
 }
 
 function applyWorldSuggest() {
-if (!lastWorldSuggest) return;
-const lines = lastWorldSuggest.split('\n');
-const get = (kw) => { const l = lines.find(x => x.toLowerCase().includes(kw)); return l?l.replace(/^[^:\u003a]+[\u003a\uff1a]\s*/,'').replace(/^[-\u2022*]\s*/,'').trim():''; };
-const era=get('th\u1eddi \u0111\u1ea1i')||get('b\u1ed1i c\u1ea3nh');
-const place=get('\u0111\u1ecba \u0111i\u1ec3m')||get('\u0111\u1ecba danh');
-const rules=get('h\u1ec7 th\u1ed1ng')||get('tu luy\u1ec7n')||get('ma ph\xe1p');
-const factions=get('th\u1ebf l\u1ef1c')||get('phe ph\xe1i');
-const vibe=get('kh\xf4ng kh\xed')||get('t\u1ed5ng th\u1ec3');
-if(era) document.getElementById('w-era').value=era;
-if(place) document.getElementById('w-place').value=place;
-if(rules) document.getElementById('w-rules').value=rules;
-if(factions) document.getElementById('w-factions').value=factions;
-if(vibe) document.getElementById('w-vibe').value=vibe;
-buildWorldText(); triggerAutosave();
-toast('\u2705 \u0110\xe3 \u0111i\u1ec1n g\u1ee3i \xfd! Ki\u1ec3m tra v\xe0 ch\u1ec9nh s\u1eeda th\xeam.');
+  if (!lastWorldSuggest) { toast('⚠️ Chưa có gợi ý!'); return; }
+  const text = lastWorldSuggest;
+  const lines = text.split('\n');
+  
+  // Extract value after keyword, taking multiple lines if needed
+  const get = (...kws) => {
+    for (const kw of kws) {
+      const idx = lines.findIndex(l => l.toLowerCase().includes(kw.toLowerCase()));
+      if (idx === -1) continue;
+      // Check same line first
+      const sameLine = lines[idx].replace(/^[^:\uff1a]+[:\uff1a]\s*/, '').replace(/^[-•*]\s*/, '').trim();
+      if (sameLine && sameLine.length > 2) return sameLine;
+      // Check next line
+      const nextLine = (lines[idx+1] || '').replace(/^[-•*]\s*/, '').trim();
+      if (nextLine && nextLine.length > 2) return nextLine;
+    }
+    return '';
+  };
+
+  const era      = get('bối cảnh thời đại', 'thời đại', 'bối cảnh');
+  const place    = get('địa điểm chính', 'địa điểm', 'địa danh');
+  const rules    = get('hệ thống đặc biệt', 'hệ thống', 'tu luyện', 'ma pháp', 'quy tắc');
+  const factions = get('thế lực', 'phe phái', 'tổ chức');
+  const vibe     = get('không khí', 'tổng thể', 'vibe');
+
+  let filled = 0;
+  if (era)      { document.getElementById('w-era').value = era; filled++; }
+  if (place)    { document.getElementById('w-place').value = place; filled++; }
+  if (rules)    { document.getElementById('w-rules').value = rules; filled++; }
+  if (factions) { document.getElementById('w-factions').value = factions; filled++; }
+  if (vibe)     { document.getElementById('w-vibe').value = vibe; filled++; }
+
+  if (filled === 0) {
+    // Fallback: dump full text into w-extra
+    document.getElementById('w-extra').value = text;
+    toast('⚠️ Không parse được — đã điền vào ô "Khác". Tự copy từng phần nhé!', 5000);
+  } else {
+    buildWorldText(); triggerAutosave();
+    toast('✅ Đã điền ' + filled + ' trường! Kiểm tra và chỉnh thêm.');
+  }
 }
 
 function renderWorldTopics() {
@@ -4115,27 +4194,49 @@ G\u1ee3i \xfd 3 xung \u0111\u1ed9t c\u1ed1t l\xf5i kh\xe1c nhau (ph\xf9 h\u1ee3p
   }
 
 function applyPlotSuggest() {
-if (!lastPlotSuggest) return;
-const lines = lastPlotSuggest.split('\n');
-const getSection = (kw) => {
-const idx = lines.findIndex(l => l.includes(kw)); if(idx===-1) return '';
-const parts = []; for(let i=idx+1;i<Math.min(idx+6,lines.length);i++){
-if(lines[i].startsWith('\u300c')||lines[i].startsWith('#')) break;
-if(lines[i].trim()) parts.push(lines[i].trim());
-} return parts.join(' ');
-};
-const conflict = getSection('Xung đột');
-const start2   = getSection('bắt đầu') || getSection('Mở đầu');
-const twist    = getSection('Plot twist') || getSection('twist');
-const theme    = getSection('Thông điệp') || getSection('Chủ đề');
-const ending   = getSection('kết thúc');
-if (conflict) document.getElementById('p-conflict').value = conflict;
-if (start2)   document.getElementById('p-start').value    = start2;
-if (twist)    document.getElementById('p-twists').value   = twist;
-if (theme)    document.getElementById('p-theme').value    = theme;
-if (ending)   document.getElementById('p-end').value      = ending;
-buildPlotText(); triggerAutosave();
-toast('✅ Đã điền gợi ý! Kiểm tra và chỉnh sửa thêm.');
+  if (!lastPlotSuggest) { toast('⚠️ Chưa có gợi ý!'); return; }
+  const text = lastPlotSuggest;
+  const lines = text.split('\n');
+
+  const get = (...kws) => {
+    for (const kw of kws) {
+      const idx = lines.findIndex(l => l.toLowerCase().includes(kw.toLowerCase()));
+      if (idx === -1) continue;
+      const sameLine = lines[idx].replace(/^[^:\uff1a]+[:\uff1a]\s*/, '').replace(/^[-•*]\s*/, '').trim();
+      if (sameLine && sameLine.length > 3) return sameLine;
+      // Collect next lines until next keyword
+      const parts = [];
+      for (let i = idx+1; i < Math.min(idx+4, lines.length); i++) {
+        const l = lines[i].trim();
+        if (!l || /^[-=]{3,}/.test(l)) break;
+        if (/^[A-ZÀ-Ỹa-zà-ỹ]+[:\uff1a]/.test(l) && i > idx+1) break;
+        parts.push(l.replace(/^[-•*]\s*/, ''));
+      }
+      if (parts.length) return parts.join(' ');
+    }
+    return '';
+  };
+
+  const conflict = get('xung đột cốt lõi', 'xung đột chính', 'xung đột');
+  const start2   = get('điểm bắt đầu', 'mở đầu', 'bắt đầu');
+  const ending   = get('kết thúc dự kiến', 'hướng kết thúc', 'kết thúc');
+  const twist    = get('plot twist', 'twist', 'bất ngờ');
+  const theme    = get('chủ đề', 'thông điệp');
+
+  let filled = 0;
+  if (conflict) { document.getElementById('p-conflict').value = conflict; filled++; }
+  if (start2)   { document.getElementById('p-start').value = start2; filled++; }
+  if (ending)   { document.getElementById('p-end').value = ending; filled++; }
+  if (twist)    { document.getElementById('p-twists').value = twist; filled++; }
+  if (theme)    { document.getElementById('p-theme').value = theme; filled++; }
+
+  if (filled === 0) {
+    document.getElementById('p-conflict').value = text;
+    toast('⚠️ Không parse được — đã điền vào ô Xung đột. Tự copy từng phần nhé!', 5000);
+  } else {
+    buildPlotText(); triggerAutosave();
+    toast('✅ Đã điền ' + filled + ' trường cốt truyện!');
+  }
 }
 
 async function aiSuggestRewriteStyle() {
