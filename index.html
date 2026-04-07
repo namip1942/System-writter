@@ -6,13 +6,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TiniX Story -- AI Sáng tác Tiểu thuyết</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 // ── SUPABASE CONFIG ──────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://mgjgtzvgwwsxhiioevox.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_MJuEYQzxv5eXYeGF0lWUiA_vrK3yPVW';
-let sb = null;
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUser = null;
 </script>
 
@@ -560,15 +560,23 @@ border:1px solid #c3e6cb;
 
 /* ── AUTH SCREEN ── */
 #auth-screen {
-  display: none !important;
-  min-height: 100vh;
-  align-items: center;
-  justify-content: center;
-  background: #faf6ee;
-  padding: 2rem 1rem;
+position: fixed !important;
+top: 0 !important; left: 0 !important;
+right: 0 !important; bottom: 0 !important;
+width: 100vw !important; height: 100vh !important;
+z-index: 999999 !important;
+background: var(--parchment) !important;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: flex-start;
+font-family: 'DM Sans', sans-serif;
+overflow-y: auto;
+overflow-x: hidden;
+-webkit-overflow-scrolling: touch;
+padding: 2rem 1rem 3rem;
 }
-  body.auth-open > header, body.auth-open > header { display: none !important; }
-  body.auth-open .shell { display: none !important; }
+body.auth-open { overflow: hidden !important; position: fixed !important; width: 100% !important; }
 .auth-card {
 background: var(--panel);
 border: 1.5px solid var(--border);
@@ -1224,7 +1232,7 @@ min-width: 120px;
 </head>
 <body>
 
-<header style="display:none">
+<header>
   <div class="logo">📖 TiniX <span>Story</span></div>
   <div class="header-center" id="api-quick-setup" style="display:none">
     <div class="api-quick-bar">
@@ -1254,7 +1262,7 @@ min-width: 120px;
   </div>
 </header>
 
-<div class="shell" style="display:none">
+<div class="shell">
   <aside>
     <div class="nav-section">
       <div class="nav-label">Sáng tác</div>
@@ -1276,6 +1284,7 @@ min-width: 120px;
 
   <main>
 
+```
 <!-- ═══ CREATE ═══ -->
 <div class="panel active" id="tab-create">
   <div class="page-title">
@@ -1390,7 +1399,33 @@ min-width: 120px;
   </div>
 
   <!-- ✨ MASTER AI SUGGEST BUTTON -->
+  <div class="master-ai-bar" id="master-ai-bar">
+    <div class="master-ai-left">
+      <span class="master-ai-icon">🤖</span>
+      <div>
+        <div class="master-ai-title">AI Gợi ý toàn bộ</div>
+        <div class="master-ai-sub">Từ tiêu đề + thể loại + màu sắc → AI tự tạo nhân vật, thế giới, cốt truyện</div>
+      </div>
+    </div>
+    <div class="master-ai-btns">
+      <button class="btn-master-ai" id="btn-master-ai-all" onclick="masterAiSuggestAll()">✨ Gợi ý tất cả</button>
+      <button class="btn-master-ai secondary" id="btn-master-ai-chars" onclick="masterAiSuggestSection('chars')">👤 Nhân vật</button>
+      <button class="btn-master-ai secondary" id="btn-master-ai-world" onclick="masterAiSuggestSection('world')">🌍 Thế giới</button>
+      <button class="btn-master-ai secondary" id="btn-master-ai-plot" onclick="masterAiSuggestSection('plot')">📖 Cốt truyện</button>
+    </div>
+  </div>
 
+  <!-- Master AI result panel -->
+  <div id="master-ai-result" style="display:none;margin-bottom:.8rem;">
+    <div class="master-result-header">
+      <span id="master-result-title">✨ Gợi ý từ AI</span>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" onclick="applyMasterSuggest()">✅ Áp dụng tất cả</button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('master-ai-result').style.display='none'">✕ Đóng</button>
+      </div>
+    </div>
+    <div id="master-result-body" style="white-space:pre-wrap;font-family:'Playfair Display',serif;font-size:.88rem;line-height:1.75;padding:.8rem 1rem;max-height:420px;overflow-y:auto;"></div>
+  </div>
 
   <!-- ── STORY BUILDER TABS ── -->
   <div class="builder-tabs-wrap">
@@ -2102,6 +2137,7 @@ min-width: 120px;
     <button class="btn btn-primary" onclick="saveSettings()">💾 Lưu cài đặt</button>
   </div>
 </div>
+```
 
   </main>
 </div>
@@ -2123,18 +2159,9 @@ let settings = JSON.parse(localStorage.getItem('tinix_settings') || '{}');
 
 // ── Migrate old model names immediately on load ───────────────────────────────
 (function migrateModelName() {
-  // Also clear any cached bad model from localStorage directly
-  try {
-    const s = JSON.parse(localStorage.getItem('tinix_settings') || '{}');
-    if (s.model && s.model.includes('4-5') && !s.model.includes('20251001')) {
-      s.model = 'claude-sonnet-4-6';
-      localStorage.setItem('tinix_settings', JSON.stringify(s));
-    }
-  } catch(e) {}
   const OLD_TO_NEW = {
-    'claude-sonnet-4-5':          'claude-sonnet-4-6',
-    'claude-sonnet-4-5-20251101': 'claude-sonnet-4-6',
     'claude-sonnet-4-6':          'claude-sonnet-4-6',
+    'claude-sonnet-4-6': 'claude-sonnet-4-6',
     'claude-opus-4-5':            'claude-opus-4-6',
     'claude-opus-4-5-20251101':   'claude-opus-4-6',
     'claude-haiku-4-5':           'claude-haiku-4-5-20251001',
@@ -2217,14 +2244,12 @@ async function signInEmail() {
   const btn = document.getElementById('btn-auth-submit');
   btn.disabled = true; btn.textContent = 'Đang đăng nhập...';
   setAuthError('auth-error', '');
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  const { data: _d, error } = await sb.auth.signInWithPassword({ email, password: pass });
   if (error) {
     const msg = error.message.includes('Invalid') ? 'Email hoặc mật khẩu không đúng' : error.message;
     setAuthError('auth-error', msg);
     btn.disabled = false; btn.textContent = 'Đăng nhập';
-  } else if (data?.user) {
-    await onSignedIn(data.user);
-  }
+  } else if (_d?.user) { await onSignedIn(_d.user); }
 }
 
 async function signUpEmail() {
@@ -2256,9 +2281,7 @@ async function signOut() {
   await sb.auth.signOut();
   currentUser = null;
   projects = [];
-  document.getElementById('auth-screen').style.setProperty('display','flex','important');
-    document.querySelector('header').style.display = 'none';
-    document.querySelector('.shell').style.display = 'none'; 
+  document.getElementById('auth-screen').style.display = 'flex'; document.body.classList.add('auth-open');
   document.getElementById('user-menu').style.display = 'none';
   localStorage.removeItem('tinix_draft');
   toast('👋 Đã đăng xuất');
@@ -2267,9 +2290,7 @@ async function signOut() {
 // ── AFTER LOGIN ──────────────────────────────
 async function onSignedIn(user) {
   currentUser = user;
-  document.getElementById('auth-screen').removeAttribute('style');
-  document.querySelector('header').style.display = '';
-  document.querySelector('.shell').style.display = ''; 
+  document.getElementById('auth-screen').style.display = 'none'; document.body.classList.remove('auth-open');
   document.getElementById('user-menu').style.display = 'flex';
 
   // Show user info
@@ -2463,25 +2484,13 @@ const _origSaveSettings = window.saveSettings;
 
 // ── INIT AUTH ────────────────────────────────
 async function initSupabaseAuth() {
-  // Init Supabase client (SDK must be loaded by now)
-  if (!sb) {
-    if (typeof supabase === 'undefined') {
-      console.error('Supabase SDK not loaded!');
-      document.getElementById('auth-error').textContent = 'Lỗi tải thư viện. Vui lòng tải lại trang.';
-      return;
-    }
-    sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  }
-
   // Check current session
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
     await onSignedIn(session.user);
   } else {
     // Show auth screen
-    document.getElementById('auth-screen').style.setProperty('display','flex','important');
-    document.querySelector('header').style.display = 'none';
-    document.querySelector('.shell').style.display = 'none'; 
+    document.getElementById('auth-screen').style.display = 'flex'; document.body.classList.add('auth-open');
   }
 
   // Listen for auth changes
@@ -2495,9 +2504,7 @@ async function initSupabaseAuth() {
       await onSignedIn(session.user);
     } else if (event === 'SIGNED_OUT') {
       currentUser = null;
-      document.getElementById('auth-screen').style.setProperty('display','flex','important');
-    document.querySelector('header').style.display = 'none';
-    document.querySelector('.shell').style.display = 'none'; 
+      document.getElementById('auth-screen').style.display = 'flex'; document.body.classList.add('auth-open');
       document.getElementById('user-menu').style.display = 'none';
     }
   });
@@ -2637,52 +2644,17 @@ window.addSecondaryChar = function() {
 };
 
 // ── Main char popup modal ─────────────────────────
-const MCM_TRAITS = [
-  'Lạnh lùng','Nóng tính','Hiền lành','Kiên định','Bí ẩn','Hài hước',
-  'Thông minh','Mạnh mẽ','Yếu đuối bên trong','Tự ti','Tự tin','Lý trí',
-  'Cảm xúc phong phú','Cô độc','Trung thành','Phản bội','Ích kỷ','Hy sinh',
-  'Tham vọng','Vô tư','Trẻ con','Già dặn','Khéo léo','Thẳng thắn'
-];
-
-function mcmRenderTraits(num) {
-  const box = document.getElementById('mcm-traits-' + num);
-  const desc = document.getElementById('mcm-desc-' + num);
-  if (!box || !desc) return;
-  box.innerHTML = MCM_TRAITS.map(t =>
-    `<span onclick="mcmAddTrait(${num},'${t}')" style="cursor:pointer;padding:.18rem .5rem;border-radius:99px;border:1px solid var(--border);font-size:.72rem;color:var(--mist);background:var(--panel);user-select:none;transition:all .12s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--ink)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--mist)'">${t}</span>`
-  ).join('');
-}
-
-function mcmAddTrait(num, trait) {
-  const desc = document.getElementById('mcm-desc-' + num);
-  if (!desc) return;
-  const cur = desc.value.trim();
-  desc.value = cur ? cur + ', ' + trait : trait;
-  desc.focus();
-}
-
-function mcmUpdateGenderOptions() {
-  const count = document.getElementById('mcm-count').value;
-  const box2 = document.getElementById('mcm-char2-box');
-  if (box2) box2.style.display = count === '2' ? 'block' : 'none';
-}
-
 function openMainCharModal() {
   const modal = document.getElementById('main-char-modal');
   if (modal) {
+    // Reset fields
     document.getElementById('mcm-count').value = '1';
-    document.getElementById('mcm-gender-1').value = 'nữ';
-    document.getElementById('mcm-age-1').value = '';
-    document.getElementById('mcm-desc-1').value = '';
-    document.getElementById('mcm-gender-2').value = 'nam';
-    document.getElementById('mcm-age-2').value = '';
-    document.getElementById('mcm-desc-2').value = '';
+    document.getElementById('mcm-gender').value = 'nữ';
+    document.getElementById('mcm-age').value = '';
+    document.getElementById('mcm-desc').value = '';
     document.getElementById('mcm-error').style.display = 'none';
-    document.getElementById('mcm-char2-box').style.display = 'none';
-    mcmRenderTraits(1);
-    mcmRenderTraits(2);
     modal.classList.add('show');
-    setTimeout(() => document.getElementById('mcm-desc-1').focus(), 100);
+    setTimeout(() => document.getElementById('mcm-desc').focus(), 100);
   }
 }
 function closeMainCharModal() {
@@ -2691,16 +2663,13 @@ function closeMainCharModal() {
 
 async function submitMainCharModal() {
   const count  = parseInt(document.getElementById('mcm-count').value) || 1;
-  const gender1 = document.getElementById('mcm-gender-1')?.value || 'nữ';
-  const age1    = document.getElementById('mcm-age-1')?.value.trim() || '';
-  const desc1   = document.getElementById('mcm-desc-1')?.value.trim() || '';
-  const gender2 = document.getElementById('mcm-gender-2')?.value || 'nam';
-  const age2    = document.getElementById('mcm-age-2')?.value.trim() || '';
-  const desc2   = document.getElementById('mcm-desc-2')?.value.trim() || '';
+  const gender = document.getElementById('mcm-gender').value;
+  const age    = document.getElementById('mcm-age').value.trim();
+  const desc   = document.getElementById('mcm-desc').value.trim();
   const errEl  = document.getElementById('mcm-error');
 
-  if (!desc1) {
-    errEl.textContent = '⚠️ Nhập mô tả ý tưởng nhân vật 1';
+  if (!desc) {
+    errEl.textContent = '⚠️ Nhập mô tả ý tưởng nhân vật';
     errEl.style.display = 'block';
     return;
   }
@@ -2711,31 +2680,27 @@ async function submitMainCharModal() {
 
   const genre = document.getElementById('c-genre')?.value || '';
   const tone  = document.getElementById('c-tone-custom')?.value.trim() || '';
-  const plot  = document.getElementById('c-plot')?.value.trim().slice(0,80) || '';
+  const plot  = document.getElementById('c-plot')?.value.trim().slice(0,100) || '';
 
-  // Build prompt for each char
-  let charReqs = `NV1: ${gender1}${age1?', '+age1+' tuổi':''} — ${desc1}`;
-  if (count === 2) charReqs += `\nNV2: ${gender2}${age2?', '+age2+' tuổi':''} — ${desc2 || 'tương phản với NV1'}`;
+  const prompt =
+    `Tạo ${count} nhân vật chính cho truyện ${genre}${tone?', tone '+tone:''}.${plot?'\\nCốt truyện: '+plot:''}
+Yêu cầu: ${gender}${age?', '+age+' tuổi':''}, ý tưởng: ${desc}
 
-  const prompt = `Tạo ${count} nhân vật chính cho truyện ${genre}${tone?', tone '+tone:''}.${plot?'\nCốt: '+plot:''}
-LƯU Ý: Tên nhân vật PHẢI là tên Hán-Việt (VD: Lâm Tiểu Vy, Mộ Dung Hàn, Đường Tuyết, Lục Vân Tiên).
-${charReqs}
-
-Với mỗi nhân vật, đúng format (không thêm gì khác):
+Với mỗi nhân vật, trả lời CHÍNH XÁC theo format dưới (không thêm gì khác):
 ===NHÂN VẬT===
 Tên: [tên]
 Giới tính: [nam/nữ]
 Tuổi: [số]
-Thân phận/Vai trò: [ngắn]
-Tính cách: [3-4 đặc điểm cụ thể]
-Thân thế & Quá khứ: [1-2 câu]
-Mục tiêu/Động lực: [1 câu]
-Bí mật/Điểm yếu: [1 câu]
+Thân phận/Vai trò: [mô tả ngắn]
+Tính cách: [3-4 đặc điểm]
+Thân thế & Quá khứ: [2-3 câu]
+Mục tiêu/Động lực: [1-2 câu]
+Bí mật/Điểm yếu: [1-2 câu]
 ===HẾT===
-Tiếng Việt.`;
+Tiếng Việt tự nhiên.`;
 
   try {
-    const result = await callClaude(prompt, 400, 0.85);
+    const result = await callClaude(prompt, 600, 0.85);
     closeMainCharModal();
     await autoFillMainChars(result, count);
     toast('✅ Đã tạo ' + count + ' nhân vật chính!');
@@ -2931,9 +2896,8 @@ function loadSettings() {
 
   // Migrate old model names
   const modelMap = {
-    'claude-sonnet-4-5':          'claude-sonnet-4-6',
-    'claude-sonnet-4-5-20251101': 'claude-sonnet-4-6',
     'claude-sonnet-4-6':          'claude-sonnet-4-6',
+    'claude-sonnet-4-6': 'claude-sonnet-4-6',
     'claude-opus-4-5':            'claude-opus-4-6',
     'claude-opus-4-5-20251101':   'claude-opus-4-6',
     'claude-haiku-4-5':           'claude-haiku-4-5-20251001',
@@ -3941,10 +3905,129 @@ return custom || selectedTone || '';
 // ═══════════════════════════════════════════
 //  MASTER AI SUGGEST
 // ═══════════════════════════════════════════
+let masterSuggestData = { chars: '', world: '', plot: '' };
 
+function buildBaseContext() {
+const title = document.getElementById('c-title')?.value.trim() || '';
+const genre = document.getElementById('c-genre')?.value || '';
+const sub = typeof getSubGenreText === 'function' ? getSubGenreText() : '';
+const tone = getTone();
+return { title, genre, sub, tone };
+}
 
+async function masterAiSuggestAll() {
+const { title, genre, sub, tone } = buildBaseContext();
+if (!genre) { toast('⚠️ Hãy chọn thể loại trước!'); return; }
 
+const btns = ['btn-master-ai-all','btn-master-ai-chars','btn-master-ai-world','btn-master-ai-plot'];
+btns.forEach(id => { const b = document.getElementById(id); if(b){b.disabled=true;} });
+document.getElementById('btn-master-ai-all').textContent = '⏳ AI đang sáng tạo...';
 
+const resultEl = document.getElementById('master-ai-result');
+const bodyEl = document.getElementById('master-result-body');
+const titleEl = document.getElementById('master-result-title');
+resultEl.style.display = 'block';
+titleEl.textContent = `✨ Gợi ý toàn bộ cho 《${title || 'Truyện của bạn'}》`;
+bodyEl.textContent = '⏳ AI đang phân tích và sáng tạo toàn bộ...';
+resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+const prompt = buildMasterPrompt(title, genre, sub, tone, 'all');
+
+try {
+const result = await callClaude(prompt, 900, 0.85);
+bodyEl.textContent = result;
+parseMasterSuggest(result);
+toast('✅ AI đã gợi ý xong! Nhấn "✅ Áp dụng tất cả" để điền vào form.', 4000);
+} catch(e) {
+bodyEl.textContent = '❌ Lỗi: ' + e.message;
+toast('❌ ' + e.message, 5000);
+}
+btns.forEach(id => { const b = document.getElementById(id); if(b){b.disabled=false;} });
+document.getElementById('btn-master-ai-all').textContent = '✨ Gợi ý tất cả';
+}
+
+async function masterAiSuggestSection(section) {
+const { title, genre, sub, tone } = buildBaseContext();
+if (!genre) { toast('⚠️ Hãy chọn thể loại trước!'); return; }
+
+const btnId = 'btn-master-ai-' + section;
+const btn = document.getElementById(btnId);
+const origText = btn?.textContent;
+if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+
+const resultEl = document.getElementById('master-ai-result');
+const bodyEl = document.getElementById('master-result-body');
+const titleEl = document.getElementById('master-result-title');
+const sectionNames = { chars: '👤 Nhân vật', world: '🌍 Thế giới quan', plot: '📖 Cốt truyện' };
+resultEl.style.display = 'block';
+titleEl.textContent = `✨ Gợi ý ${sectionNames[section]} cho 《${title || 'Truyện'}》`;
+bodyEl.textContent = '⏳ AI đang sáng tạo...';
+resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+const prompt = buildMasterPrompt(title, genre, sub, tone, section);
+
+try {
+const result = await callClaude(prompt, 500, 0.85);
+bodyEl.textContent = result;
+// Store for partial apply
+masterSuggestData[section] = result;
+toast(`✅ Gợi ý ${sectionNames[section]} xong!`, 3000);
+} catch(e) {
+bodyEl.textContent = '❌ Lỗi: ' + e.message;
+}
+if (btn) { btn.disabled = false; btn.textContent = origText; }
+}
+
+function buildMasterPrompt(title, genre, sub, tone, section) {
+const ctx = [
+title ? `《${title}》` : '',
+genre,
+sub  ? sub  : '',
+tone ? 'tone: ' + tone : '',
+].filter(Boolean).join(' | ');
+
+const templates = {
+chars: `Gợi ý dàn nhân vật cho truyện ${ctx}. NV chính: Tên|Giới tính|Tuổi|Thân phận|Tính cách (3 điểm)|Mục tiêu|Bí mật NV phụ (2-3): Tên|Loại quan hệ|Tính cách ngắn|Vai trò Phản diện: Tên|Động cơ thật Tiếng Việt, ngắn gọn, phù hợp thể loại.`,
+
+world: `Xây dựng thế giới quan cho truyện ${ctx}.
+
+Thời đại/Bối cảnh: [1-2 câu]
+Địa điểm chính: [tên + đặc trưng ngắn]
+Hệ thống đặc biệt: [2-3 câu]
+Phe phái: [tên | mục tiêu] (2-3 phe)
+Không khí/Vibe: [1 câu]
+Tiếng Việt, súc tích.`,
+
+plot: `Xây dựng cốt truyện cho truyện ${ctx}.
+
+Xung đột cốt lõi: [1-2 câu]
+Điểm mở đầu ấn tượng: [1-2 câu]
+Diễn biến chính: [3-4 câu]
+Plot twist: [1-2 câu]
+Kết thúc: [hướng + lý do ngắn]
+Tiếng Việt, súc tích.`,
+
+all: `Tạo blueprint đầy đủ cho truyện ${ctx}.
+
+NHÂN VẬT CHÍNH: Tên|Giới tính|Tuổi|Thân phận|Tính cách|Mục tiêu|Bí mật
+NV PHỤ (2-3): Tên|Loại|Quan hệ|Vai trò
+PHẢN DIỆN: Tên|Động cơ
+
+THẾ GIỚI QUAN:
+Bối cảnh: [1-2 câu]
+Hệ thống: [2-3 câu]
+Phe phái: [ngắn]
+
+CỐT TRUYỆN:
+Xung đột: [1-2 câu]
+Mở đầu: [1-2 câu]
+Cao trào: [1-2 câu]
+Kết thúc: [1 câu]
+
+Tiếng Việt, súc tích, đúng thể loại.`,
+};
+return templates[section] || templates.all;
+}
 
 function parseMasterSuggest(text) {
 masterSuggestData = { chars: '', world: '', plot: '' };
@@ -3960,6 +4043,51 @@ masterSuggestData.chars = text;
 }
 }
 
+function applyMasterSuggest() {
+const body = document.getElementById('master-result-body').textContent;
+if (!body) return;
+
+// Parse and fill world fields
+const lines = body.split('\n');
+const getVal = (kw) => {
+const idx = lines.findIndex(l => l.toLowerCase().includes(kw.toLowerCase()) && l.includes(':'));
+if (idx === -1) return '';
+const val = lines[idx].replace(/^[^:：]+[：:]\s*/, '').trim();
+if (val) return val;
+// check next line
+return lines[idx+1]?.trim() || '';
+};
+
+const era = getVal('bối cảnh thời đại') || getVal('bối cảnh');
+const place = getVal('địa điểm chính') || getVal('địa điểm');
+const rules = getVal('hệ thống đặc biệt') || getVal('hệ thống');
+const factions = getVal('thế lực') || getVal('phe phái');
+const vibe = getVal('không khí');
+const conflict = getVal('xung đột cốt lõi') || getVal('xung đột');
+const start = getVal('điểm bắt đầu');
+const twist = getVal('plot twist chính') || getVal('plot twist');
+const theme = getVal('chủ đề') || getVal('thông điệp');
+const ending = getVal('hướng kết thúc') || getVal('kết thúc');
+
+if (era) document.getElementById('w-era').value = era;
+if (place) document.getElementById('w-place').value = place;
+if (rules) document.getElementById('w-rules').value = rules;
+if (factions) document.getElementById('w-factions').value = factions;
+if (vibe) document.getElementById('w-vibe').value = vibe;
+if (conflict) document.getElementById('p-conflict').value = conflict;
+if (start) document.getElementById('p-start').value = start;
+if (twist) document.getElementById('p-twists').value = twist;
+if (theme) document.getElementById('p-theme').value = theme;
+if (ending) document.getElementById('p-end').value = ending;
+
+buildWorldText(); buildPlotText(); triggerAutosave();
+toast('✅ Đã điền vào form! Hãy kiểm tra và chỉnh sửa thêm, đặc biệt phần nhân vật.', 5000);
+// Switch to chars tab to show user they need to fill chars manually
+setTimeout(() => {
+const charTab = document.querySelector('.btab[data-btab="chars"]');
+if (charTab) switchBTab(charTab, 'chars');
+}, 500);
+}
 
 // ═══════════════════════════════════════════
 //  AI SUGGESTION SYSTEM
@@ -4026,125 +4154,59 @@ lastCharSuggest = await runAiSuggest('btn-ai-all-chars', 'ai-result-chars', 'ai-
 }
 
 function applyCharSuggest() {
-  if (!lastCharSuggest) { toast('⚠️ Chưa có gợi ý!'); return; }
-  const text = lastCharSuggest;
-  // Parse each NV block
-  const blocks = text.split(/(?=(?:NV|Nhân vật|【|\d+\.|---)[\s\S])/i).filter(b => b.trim());
-  
-  // Helper: extract value after a keyword
-  const getVal = (block, ...keys) => {
-    for (const key of keys) {
-      const re = new RegExp(key + '[\\s]*[:\uff1a|]\\s*(.+)', 'i');
-      const m = block.match(re);
-      if (m) return m[1].replace(/\[|\]/g, '').trim();
-    }
-    return '';
-  };
-
-  // Try to fill first char slot (main char 1)
-  if (mainChars.length === 0) addMainChar();
-  
-  const allText = text;
-  // Find sections by common labels
-  const getField = (...keys) => {
-    for (const key of keys) {
-      const re = new RegExp(key + '[\\s]*[:\uff1a|\\-]\\s*([^\\n]+)', 'i');
-      const m = allText.match(re);
-      if (m) return m[1].replace(/\[|\]/g, '').trim();
-    }
-    return '';
-  };
-
-  const name        = getField('Tên', 'Name');
-  const gender      = getField('Giới tính', 'Gender');
-  const age         = getField('Tuổi', 'Age');
-  const role        = getField('Thân phận', 'Vai trò', 'Role');
-  const personality = getField('Tính cách', 'Personality');
-  const background  = getField('Thân thế', 'Quá khứ', 'Background');
-  const goal        = getField('Mục tiêu', 'Động lực', 'Goal');
-  const secret      = getField('Bí mật', 'Điểm yếu', 'Secret');
-
-  // Fill into first main char
-  if (mainChars[0]) {
-    if (name)        { mainChars[0].name = name;               updateMainChar(mainChars[0].id, 'name', name); }
-    if (gender)      { mainChars[0].gender = gender;           updateMainChar(mainChars[0].id, 'gender', gender); }
-    if (age)         { mainChars[0].age = age;                 updateMainChar(mainChars[0].id, 'age', age); }
-    if (role)        { mainChars[0].role = role;               updateMainChar(mainChars[0].id, 'role', role); }
-    if (personality) { mainChars[0].personality = personality; updateMainChar(mainChars[0].id, 'personality', personality); }
-    if (background)  { mainChars[0].background = background;   updateMainChar(mainChars[0].id, 'background', background); }
-    if (goal)        { mainChars[0].goal = goal;               updateMainChar(mainChars[0].id, 'goal', goal); }
-    if (secret)      { mainChars[0].secret = secret;           updateMainChar(mainChars[0].id, 'secret', secret); }
-    renderMainChars();
-    updateCharsPreview();
-    triggerAutosave();
-    toast('✅ Đã điền nhân vật! Kiểm tra và chỉnh thêm.');
-  } else {
-    toast('⚠️ Không tìm thấy nhân vật để điền. Hãy thêm nhân vật trước.');
-  }
+toast('\ud83d\udca1 \u0110\u1ecdc g\u1ee3i \xfd v\xe0 nh\u1eadp v\xe0o t\u1eebng \xf4 nh\xe2n v\u1eadt!', 4000);
 }
 
 async function aiSuggestWorld(mode) {
-const { genre, sub, chars, plot, tone } = getContext();
-if (!genre) { toast('\u26a0\ufe0f H\xe3y ch\u1ecdn th\u1ec3 lo\u1ea1i tr\u01b0\u1edbc!'); return; }
-const btnId = mode==='quick'?'btn-ai-world-quick':'btn-ai-world-detail';
-const extra = mode==='detail'?'\n- \u0110\u1ecba l\xfd & c\xe1c v\xf9ng \u0111\u1ea5t\n- L\u1ecbch s\u1eed \u1ea3nh h\u01b0\u1edfng hi\u1ec7n t\u1ea1i\n- V\u0103n h\xf3a, t\u1eadp t\u1ee5c\n- Kinh t\u1ebf & quy\u1ec1n l\u1ef1c\n- B\xed \u1ea9n ch\u01b0a kh\xe1m ph\xe1':'';
-const prompt = `Chuy\xean gia x\xe2y d\u1ef1ng th\u1ebf gi\u1edbi ti\u1ec3u thuy\u1ebft ${genre}${sub?' + '+sub:''}${tone?', tone '+tone:''}.
-${chars?'Nh\xe2n v\u1eadt: '+chars.slice(0,200):''}
-${plot?'C\u1ed1t truy\u1ec7n: '+plot.slice(0,120):''}
-
-G\u1ee3i \xfd th\u1ebf gi\u1edbi quan ph\xf9 h\u1ee3p ${genre}${tone?', tone '+tone:''}:
-
-- B\u1ed1i c\u1ea3nh th\u1eddi \u0111\u1ea1i (c\u1ee5 th\u1ec3, s\u1ed1ng \u0111\u1ed9ng)
-- \u0110\u1ecba \u0111i\u1ec3m ch\xednh (t\xean v\xe0 \u0111\u1eb7c tr\u01b0ng n\u1ed5i b\u1eadt)
-- H\u1ec7 th\u1ed1ng \u0111\u1eb7c bi\u1ec7t (tu luy\u1ec7n/ma ph\xe1p/c\xf4ng ngh\u1ec7...)
-- Th\u1ebf l\u1ef1c & phe ph\xe1i (2-3 b\xean c\xf3 xung \u0111\u1ed9t)
-- Kh\xf4ng kh\xed t\u1ed5ng th\u1ec3 ph\xf9 h\u1ee3p tone${extra}
-
-S\xe1ng t\u1ea1o, \u0111\u1ed9c \u0111\xe1o. Ti\u1ebfng Vi\u1ec7t.`;
-lastWorldSuggest = await runAiSuggest(btnId, 'ai-result-world', 'ai-result-world-content', prompt);
+  const { genre, sub, chars, plot, tone } = getContext();
+  if (!genre) { toast('\u26a0\ufe0f Ch\u1ecdn th\u1ec3 lo\u1ea1i tr\u01b0\u1edbc!'); return; }
+  const btnId = mode==='quick'?'btn-ai-world-quick':'btn-ai-world-detail';
+  const btn = document.getElementById(btnId);
+  if(btn){ btn.disabled=true; btn.textContent='...'; }
+  const p = 'X\xe2y d\u1ef1ng th\u1ebf gi\u1edbi quan cho truy\u1ec7n ' + genre + (sub?' + '+sub:'') + (tone?', tone '+tone:'') + '.' +
+    (chars?'\nNV: '+chars.slice(0,150):'') + (plot?'\nC\u1ed1t: '+plot.slice(0,100):'') +
+    '\nTr\u1ea3 l\u1eddi \u0111\xfang format n\xe0y (ng\u1eafn g\u1ecdn, c\u1ee5 th\u1ec3):\nB\u1ed1i c\u1ea3nh th\u1eddi \u0111\u1ea1i: [m\xf4 t\u1ea3]\n\u0110\u1ecba \u0111i\u1ec3m ch\xednh: [t\xean + \u0111\u1eb7c tr\u01b0ng]\nQuy t\u1eafc & H\u1ec7 th\u1ed1ng: [2-3 c\xe2u]\nPhe ph\xe1i & T\u1ed5 ch\u1ee9c: [c\xe1c phe + xung \u0111\u1ed9t]\nKh\xf4ng kh\xed & Vibe: [1 c\xe2u]\nTi\u1ebfng Vi\u1ec7t.';
+  try {
+    const result = await callClaude(p, 350, 0.85);
+    lastWorldSuggest = result;
+    const cEl=document.getElementById('ai-result-world-content'),rEl=document.getElementById('ai-result-world');
+    if(cEl)cEl.textContent=result; if(rEl)rEl.classList.add('show');
+    const lines=result.split('\n');
+    const get=(...kws)=>{for(const kw of kws){const ln=lines.find(l=>l.toLowerCase().trim().startsWith(kw.toLowerCase()));if(!ln)continue;const v=ln.replace(/^[^:\uff1a]+[:\uff1a]\s*/,'').replace(/^\[|\]$/g,'').trim();if(v&&v.length>2)return v;}return '';};
+    const era=get('b\u1ed1i c\u1ea3nh th\u1eddi \u0111\u1ea1i','b\u1ed1i c\u1ea3nh');
+    const place=get('\u0111\u1ecba \u0111i\u1ec3m ch\xednh','\u0111\u1ecba \u0111i\u1ec3m');
+    const rules=get('quy t\u1eafc & h\u1ec7 th\u1ed1ng','h\u1ec7 th\u1ed1ng','quy t\u1eafc');
+    const fac=get('phe ph\xe1i & t\u1ed5 ch\u1ee9c','phe ph\xe1i','t\u1ed5 ch\u1ee9c');
+    const vibe=get('kh\xf4ng kh\xed & vibe','kh\xf4ng kh\xed');
+    let n=0;
+    if(era){document.getElementById('w-era').value=era;n++;}
+    if(place){document.getElementById('w-place').value=place;n++;}
+    if(rules){document.getElementById('w-rules').value=rules;n++;}
+    if(fac){document.getElementById('w-factions').value=fac;n++;}
+    if(vibe){document.getElementById('w-vibe').value=vibe;n++;}
+    buildWorldText();triggerAutosave();
+    toast('\u2705 \u0110\xe3 \u0111i\u1ec1n '+n+' tr\u01b0\u1eddng!');
+  } catch(e){toast('\u274c '+e.message,4000);}
+  if(btn){btn.disabled=false;btn.textContent=mode==='quick'?'\u26a1 G\u1ee3i \xfd nhanh':'\ud83c\udf0d G\u1ee3i \xfd chi ti\u1ebft';}
 }
 
+
 function applyWorldSuggest() {
-  if (!lastWorldSuggest) { toast('⚠️ Chưa có gợi ý!'); return; }
-  const text = lastWorldSuggest;
-  const lines = text.split('\n');
-  
-  // Extract value after keyword, taking multiple lines if needed
-  const get = (...kws) => {
-    for (const kw of kws) {
-      const idx = lines.findIndex(l => l.toLowerCase().includes(kw.toLowerCase()));
-      if (idx === -1) continue;
-      // Check same line first
-      const sameLine = lines[idx].replace(/^[^:\uff1a]+[:\uff1a]\s*/, '').replace(/^[-•*]\s*/, '').trim();
-      if (sameLine && sameLine.length > 2) return sameLine;
-      // Check next line
-      const nextLine = (lines[idx+1] || '').replace(/^[-•*]\s*/, '').trim();
-      if (nextLine && nextLine.length > 2) return nextLine;
-    }
-    return '';
-  };
-
-  const era      = get('bối cảnh thời đại', 'thời đại', 'bối cảnh');
-  const place    = get('địa điểm chính', 'địa điểm', 'địa danh');
-  const rules    = get('hệ thống đặc biệt', 'hệ thống', 'tu luyện', 'ma pháp', 'quy tắc');
-  const factions = get('thế lực', 'phe phái', 'tổ chức');
-  const vibe     = get('không khí', 'tổng thể', 'vibe');
-
-  let filled = 0;
-  if (era)      { document.getElementById('w-era').value = era; filled++; }
-  if (place)    { document.getElementById('w-place').value = place; filled++; }
-  if (rules)    { document.getElementById('w-rules').value = rules; filled++; }
-  if (factions) { document.getElementById('w-factions').value = factions; filled++; }
-  if (vibe)     { document.getElementById('w-vibe').value = vibe; filled++; }
-
-  if (filled === 0) {
-    // Fallback: dump full text into w-extra
-    document.getElementById('w-extra').value = text;
-    toast('⚠️ Không parse được — đã điền vào ô "Khác". Tự copy từng phần nhé!', 5000);
-  } else {
-    buildWorldText(); triggerAutosave();
-    toast('✅ Đã điền ' + filled + ' trường! Kiểm tra và chỉnh thêm.');
-  }
+if (!lastWorldSuggest) return;
+const lines = lastWorldSuggest.split('\n');
+const get = (kw) => { const l = lines.find(x => x.toLowerCase().includes(kw)); return l?l.replace(/^[^:\u003a]+[\u003a\uff1a]\s*/,'').replace(/^[-\u2022*]\s*/,'').trim():''; };
+const era=get('th\u1eddi \u0111\u1ea1i')||get('b\u1ed1i c\u1ea3nh');
+const place=get('\u0111\u1ecba \u0111i\u1ec3m')||get('\u0111\u1ecba danh');
+const rules=get('h\u1ec7 th\u1ed1ng')||get('tu luy\u1ec7n')||get('ma ph\xe1p');
+const factions=get('th\u1ebf l\u1ef1c')||get('phe ph\xe1i');
+const vibe=get('kh\xf4ng kh\xed')||get('t\u1ed5ng th\u1ec3');
+if(era) document.getElementById('w-era').value=era;
+if(place) document.getElementById('w-place').value=place;
+if(rules) document.getElementById('w-rules').value=rules;
+if(factions) document.getElementById('w-factions').value=factions;
+if(vibe) document.getElementById('w-vibe').value=vibe;
+buildWorldText(); triggerAutosave();
+toast('\u2705 \u0110\xe3 \u0111i\u1ec1n g\u1ee3i \xfd! Ki\u1ec3m tra v\xe0 ch\u1ec9nh s\u1eeda th\xeam.');
 }
 
 function renderWorldTopics() {
@@ -4170,73 +4232,66 @@ lastWorldSuggest = await runAiSuggest('btn-ai-world-quick', 'ai-result-world', '
 }
 
 async function aiSuggestPlot(type) {
-const { genre, sub, chars, world, tone } = getContext();
-if (!genre) { toast('\u26a0\ufe0f H\xe3y ch\u1ecdn th\u1ec3 lo\u1ea1i tr\u01b0\u1edbc!'); return; }
-const btnMap = { conflict:'btn-ai-plot-conflict', twist:'btn-ai-plot-twist', full:'btn-ai-plot-full' };
-const toneNote = tone ? ', tone ' + tone : '';
-const prompts = {
-conflict: `Nh\xe0 v\u0103n chuy\xean ${genre}${sub?' + '+sub:''}${toneNote}. NV: ${chars.slice(0,200)}. Th\u1ebf gi\u1edbi: ${world.slice(0,120)}.
-G\u1ee3i \xfd 3 xung \u0111\u1ed9t c\u1ed1t l\xf5i kh\xe1c nhau (ph\xf9 h\u1ee3p ${genre}${toneNote}), m\u1ed7i c\xe1i:
-
-- T\xean xung \u0111\u1ed9t
-- M\xf4 t\u1ea3 (nh\xe2n v\u1eadt mu\u1ed1n g\xec, c\u1ea3n tr\u1edf l\xe0 g\xec, stakes l\xe0 g\xec)
-- \u0110i\u1ec3m hay nh\u1ea5t & \u0111\u1ed1i t\u01b0\u1ee3ng \u0111\u1ecdc ph\xf9 h\u1ee3p
-  Xung \u0111\u1ed9t c\xf3 chi\u1ec1u s\xe2u c\u1ea3m x\xfac. Ti\u1ebfng Vi\u1ec7t.`, twist: `Nh\xe0 v\u0103n chuy\xean ${genre}${sub?' + '+sub:''}${toneNote}. NV: ${chars.slice(0,200)}.
-  G\u1ee3i \xfd 5 plot twist b\u1ea5t ng\u1edd & h\u1ee3p l\xfd (ph\xf9 h\u1ee3p tone ${tone||'truy\u1ec7n'}):
-- X\u1ea3y ra khi n\xe0o (\u0111\u1ea7u/gi\u1eefa/cu\u1ed1i)
-- N\u1ed9i dung twist (b\u1ea5t ng\u1edd nh\u01b0ng nh\xecn l\u1ea1i h\u1ee3p l\xfd)
-- T\xe1c \u0111\u1ed9ng \u0111\u1ebfn nh\xe2n v\u1eadt
-- C\xe1ch foreshadowing kh\xe9o
-  \u01afu ti\xean twist li\xean quan c\u1ea3m x\xfac. Ti\u1ebfng Vi\u1ec7t.`, full: `Nh\xe0 v\u0103n chuy\xean ${genre}${sub?' + '+sub:''}${toneNote}.\nNV: ${chars.slice(0,200)}\nTh\u1ebf gi\u1edbi: ${world.slice(0,120)}\n
-  G\u1ee3i \xfd c\u1ed1t truy\u1ec7n HO\u00c0N CH\u1ec8NH ph\xf9 h\u1ee3p ${genre}${toneNote}:\n【Xung \u0111\u1ed9t c\u1ed1t l\xf5i】\n【\u0110i\u1ec3m b\u1eaft \u0111\u1ea7u \u1ea5n t\u01b0\u1ee3ng】\n【H\u1ed3i 1 - M\u1edf \u0111\u1ea7u (25%)】\n【H\u1ed3i 2 - Ph\xe1t tri\u1ec3n & Cao tr\xe0o (50%)】\n【H\u1ed3i 3 - K\u1ebft th\xfac (25%)】\n【Plot twist ch\xednh】\n【Ch\u1ee7 \u0111\u1ec1 & Th\xf4ng \u0111i\u1ec7p】\n【H\u01b0\u1edbng k\u1ebft th\xfac ph\xf9 h\u1ee3p tone ${tone||'truy\u1ec7n'}】\nTi\u1ebfng Vi\u1ec7t.`
+  const { genre, sub, chars, world, tone } = getContext();
+  if (!genre) { toast('\u26a0\ufe0f Ch\u1ecdn th\u1ec3 lo\u1ea1i tr\u01b0\u1edbc!'); return; }
+  const bm={conflict:'btn-ai-plot-conflict',twist:'btn-ai-plot-twist',full:'btn-ai-plot-full'};
+  const btn=document.getElementById(bm[type]);
+  if(btn){btn.disabled=true;btn.textContent='...';}
+  const tn=tone?', tone '+tone:'';
+  const fmt='\nTr\u1ea3 l\u1eddi \u0111\xfang format:\nXung \u0111\u1ed9t ch\xednh: [m\xf4 t\u1ea3]\nM\u1edf \u0111\u1ea7u: [c\u1ea3nh kh\u1edfi \u0111\u1ed9ng]\nH\u01b0\u1edbng k\u1ebft th\xfac: [lo\u1ea1i ending]\nTwist/B\u1ea5t ng\u1edd: [n\u1ed9i dung]\nCh\u1ee7 \u0111\u1ec1: [th\xf4ng \u0111i\u1ec7p]\nTi\u1ebfng Vi\u1ec7t.';
+  const ps={
+    conflict:'Nh\xe0 v\u0103n '+genre+tn+'. NV: '+chars.slice(0,150)+'. G\u1ee3i \xfd xung \u0111\u1ed9t hay nh\u1ea5t.'+fmt,
+    twist:'Nh\xe0 v\u0103n '+genre+tn+'. NV: '+chars.slice(0,150)+'. G\u1ee3i \xfd plot twist h\u1ea5p d\u1eabn.'+fmt,
+    full:'Nh\xe0 v\u0103n '+genre+tn+'. NV: '+chars.slice(0,150)+'. TG: '+world.slice(0,100)+'. X\xe2y d\u1ef1ng c\u1ed1t truy\u1ec7n ho\xe0n ch\u1ec9nh.'+fmt
   };
-  lastPlotSuggest = await runAiSuggest(btnMap[type], 'ai-result-plot', 'ai-result-plot-content', prompts[type]);
-  }
+  try {
+    const result=await callClaude(ps[type],350,0.85);
+    lastPlotSuggest=result;
+    const cEl=document.getElementById('ai-result-plot-content'),rEl=document.getElementById('ai-result-plot');
+    if(cEl)cEl.textContent=result;if(rEl)rEl.classList.add('show');
+    const lines=result.split('\n');
+    const get=(...kws)=>{for(const kw of kws){const ln=lines.find(l=>l.toLowerCase().trim().startsWith(kw.toLowerCase()));if(!ln)continue;const v=ln.replace(/^[^:\uff1a]+[:\uff1a]\s*/,'').replace(/^\[|\]$/g,'').trim();if(v&&v.length>2)return v;}return '';};
+    const conflict=get('xung \u0111\u1ed9t ch\xednh','xung \u0111\u1ed9t');
+    const start2=get('m\u1edf \u0111\u1ea7u');
+    const ending=get('h\u01b0\u1edbng k\u1ebft th\xfac','k\u1ebft th\xfac');
+    const twist=get('twist/b\u1ea5t ng\u1edd','twist','b\u1ea5t ng\u1edd');
+    const theme=get('ch\u1ee7 \u0111\u1ec1','th\xf4ng \u0111i\u1ec7p');
+    let n=0;
+    if(conflict){document.getElementById('p-conflict').value=conflict;n++;}
+    if(start2){document.getElementById('p-start').value=start2;n++;}
+    if(ending){document.getElementById('p-end').value=ending;n++;}
+    if(twist){document.getElementById('p-twists').value=twist;n++;}
+    if(theme){document.getElementById('p-theme').value=theme;n++;}
+    buildPlotText();triggerAutosave();
+    toast('\u2705 \u0110\xe3 \u0111i\u1ec1n '+n+' tr\u01b0\u1eddng c\u1ed1t truy\u1ec7n!');
+  } catch(e){toast('\u274c '+e.message,4000);}
+  const lb={conflict:'\u26a1 Xung \u0111\u1ed9t',twist:'\ud83c\udf00 Plot twist',full:'\ud83d\udcd6 To\xe0n b\u1ed9'};
+  if(btn){btn.disabled=false;btn.textContent=lb[type];}
+}
+
 
 function applyPlotSuggest() {
-  if (!lastPlotSuggest) { toast('⚠️ Chưa có gợi ý!'); return; }
-  const text = lastPlotSuggest;
-  const lines = text.split('\n');
-
-  const get = (...kws) => {
-    for (const kw of kws) {
-      const idx = lines.findIndex(l => l.toLowerCase().includes(kw.toLowerCase()));
-      if (idx === -1) continue;
-      const sameLine = lines[idx].replace(/^[^:\uff1a]+[:\uff1a]\s*/, '').replace(/^[-•*]\s*/, '').trim();
-      if (sameLine && sameLine.length > 3) return sameLine;
-      // Collect next lines until next keyword
-      const parts = [];
-      for (let i = idx+1; i < Math.min(idx+4, lines.length); i++) {
-        const l = lines[i].trim();
-        if (!l || /^[-=]{3,}/.test(l)) break;
-        if (/^[A-ZÀ-Ỹa-zà-ỹ]+[:\uff1a]/.test(l) && i > idx+1) break;
-        parts.push(l.replace(/^[-•*]\s*/, ''));
-      }
-      if (parts.length) return parts.join(' ');
-    }
-    return '';
-  };
-
-  const conflict = get('xung đột cốt lõi', 'xung đột chính', 'xung đột');
-  const start2   = get('điểm bắt đầu', 'mở đầu', 'bắt đầu');
-  const ending   = get('kết thúc dự kiến', 'hướng kết thúc', 'kết thúc');
-  const twist    = get('plot twist', 'twist', 'bất ngờ');
-  const theme    = get('chủ đề', 'thông điệp');
-
-  let filled = 0;
-  if (conflict) { document.getElementById('p-conflict').value = conflict; filled++; }
-  if (start2)   { document.getElementById('p-start').value = start2; filled++; }
-  if (ending)   { document.getElementById('p-end').value = ending; filled++; }
-  if (twist)    { document.getElementById('p-twists').value = twist; filled++; }
-  if (theme)    { document.getElementById('p-theme').value = theme; filled++; }
-
-  if (filled === 0) {
-    document.getElementById('p-conflict').value = text;
-    toast('⚠️ Không parse được — đã điền vào ô Xung đột. Tự copy từng phần nhé!', 5000);
-  } else {
-    buildPlotText(); triggerAutosave();
-    toast('✅ Đã điền ' + filled + ' trường cốt truyện!');
-  }
+if (!lastPlotSuggest) return;
+const lines = lastPlotSuggest.split('\n');
+const getSection = (kw) => {
+const idx = lines.findIndex(l => l.includes(kw)); if(idx===-1) return '';
+const parts = []; for(let i=idx+1;i<Math.min(idx+6,lines.length);i++){
+if(lines[i].startsWith('\u300c')||lines[i].startsWith('#')) break;
+if(lines[i].trim()) parts.push(lines[i].trim());
+} return parts.join(' ');
+};
+const conflict = getSection('Xung đột');
+const start2   = getSection('bắt đầu') || getSection('Mở đầu');
+const twist    = getSection('Plot twist') || getSection('twist');
+const theme    = getSection('Thông điệp') || getSection('Chủ đề');
+const ending   = getSection('kết thúc');
+if (conflict) document.getElementById('p-conflict').value = conflict;
+if (start2)   document.getElementById('p-start').value    = start2;
+if (twist)    document.getElementById('p-twists').value   = twist;
+if (theme)    document.getElementById('p-theme').value    = theme;
+if (ending)   document.getElementById('p-end').value      = ending;
+buildPlotText(); triggerAutosave();
+toast('✅ Đã điền gợi ý! Kiểm tra và chỉnh sửa thêm.');
 }
 
 async function aiSuggestRewriteStyle() {
@@ -4743,9 +4798,7 @@ if (!exp || Date.now() < exp - 60000) return session.access_token;
 const { data: rd } = await sb.auth.refreshSession();
 if (rd?.session?.access_token) return rd.session.access_token;
 currentUser = null;
-document.getElementById('auth-screen').style.setProperty('display','flex','important');
-    document.querySelector('header').style.display = 'none';
-    document.querySelector('.shell').style.display = 'none'; 
+document.getElementById('auth-screen').style.display = 'flex'; document.body.classList.add('auth-open');
 document.getElementById('user-menu').style.display = 'none';
 const e2 = document.getElementById('auth-error');
 if (e2) { e2.textContent = 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.'; e2.classList.add('show'); }
@@ -4780,10 +4833,7 @@ async function callClaude(prompt, maxTokens, temp) {
 const token = await getAuthToken();
 if (!token) throw new Error('Chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.');
 
-// Always validate model name before calling API
-const VALID_MODELS = ['claude-sonnet-4-6','claude-opus-4-6','claude-haiku-4-5-20251001'];
-let model = settings.model || 'claude-sonnet-4-6';
-if (!VALID_MODELS.includes(model)) { model = 'claude-sonnet-4-6'; settings.model = model; }
+const model = settings.model || 'claude-sonnet-4-6';
 const temperature = Math.min(1.0, Math.max(0.0, temp !== undefined ? parseFloat(temp) : (parseFloat(settings.temperature) || 0.8)));
 
 const response = await fetch(EDGE_URL, {
@@ -6547,50 +6597,53 @@ toast._t = setTimeout(() => el.classList.remove('show'), duration);
 <div id="auth-screen">
   <div class="auth-card">
     <div class="auth-logo">📖 TiniX <span>Story</span></div>
-    <div class="auth-tagline">AI Sáng tác Tiểu thuyết — Đăng nhập để lưu truyện trên cloud</div>
+    <div class="auth-tagline">AI Sáng tác Tiểu thuyết -- Đăng nhập để lưu truyện trên cloud</div>
 
-    <button class="btn-social" onclick="signInGoogle()">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;flex-shrink:0">
-        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-      </svg>
-      Đăng nhập với Google
-    </button>
+```
+<button class="btn-social" onclick="signInGoogle()">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+  </svg>
+  Đăng nhập với Google
+</button>
 
-    <div class="auth-divider">hoặc dùng email</div>
+<div class="auth-divider">hoặc dùng email</div>
 
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Đăng nhập</button>
-      <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Đăng ký</button>
-    </div>
+<div class="auth-tabs">
+  <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Đăng nhập</button>
+  <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Đăng ký</button>
+</div>
 
-    <div class="auth-form" id="auth-login-form">
-      <input type="email" id="auth-email" placeholder="Email" autocomplete="email">
-      <input type="password" id="auth-password" placeholder="Mật khẩu" autocomplete="current-password">
-      <div class="auth-error" id="auth-error"></div>
-      <label style="display:flex;align-items:center;gap:.5rem;font-size:.81rem;color:var(--mist);cursor:pointer;user-select:none;font-weight:400;text-transform:none;letter-spacing:0;">
-        <input type="checkbox" id="remember-me" style="width:15px;height:15px;cursor:pointer;accent-color:var(--gold);">
-        Lưu đăng nhập
-      </label>
-      <button class="btn-auth-primary" id="btn-auth-submit" onclick="signInEmail()">Đăng nhập</button>
-      <button style="background:none;border:none;color:var(--mist);font-size:.78rem;cursor:pointer;text-align:center;margin-top:.2rem;" onclick="forgotPassword()">Quên mật khẩu?</button>
-    </div>
+<div class="auth-form" id="auth-login-form">
+  <input type="email" id="auth-email" placeholder="Email" autocomplete="email">
+  <input type="password" id="auth-password" placeholder="Mật khẩu" autocomplete="current-password">
+  <div class="auth-error" id="auth-error"></div>
+  <label style="display:flex;align-items:center;gap:.5rem;font-size:.81rem;color:var(--mist);cursor:pointer;user-select:none;font-weight:400;text-transform:none;letter-spacing:0;">
+    <input type="checkbox" id="remember-me" style="width:15px;height:15px;cursor:pointer;accent-color:var(--gold);">
+    Lưu đăng nhập
+  </label>
+  <button class="btn-auth-primary" id="btn-auth-submit" onclick="signInEmail()">Đăng nhập</button>
+  <button style="background:none;border:none;color:var(--mist);font-size:.78rem;cursor:pointer;text-align:center;margin-top:.2rem;" onclick="forgotPassword()">Quên mật khẩu?</button>
+</div>
 
-    <div class="auth-form" id="auth-signup-form" style="display:none;">
-      <input type="email" id="auth-signup-email" placeholder="Email">
-      <input type="password" id="auth-signup-pass" placeholder="Mật khẩu (ít nhất 6 ký tự)">
-      <input type="password" id="auth-signup-pass2" placeholder="Nhập lại mật khẩu">
-      <div class="auth-error" id="auth-signup-error"></div>
-      <div class="auth-success" id="auth-signup-success"></div>
-      <button class="btn-auth-primary" onclick="signUpEmail()">Tạo tài khoản</button>
-    </div>
+<div class="auth-form" id="auth-signup-form" style="display:none;">
+  <input type="email" id="auth-signup-email" placeholder="Email">
+  <input type="password" id="auth-signup-pass" placeholder="Mật khẩu (ít nhất 6 ký tự)">
+  <input type="password" id="auth-signup-pass2" placeholder="Nhập lại mật khẩu">
+  <div class="auth-error" id="auth-signup-error"></div>
+  <div class="auth-success" id="auth-signup-success"></div>
+  <button class="btn-auth-primary" onclick="signUpEmail()">Tạo tài khoản</button>
+</div>
 
-    <div style="font-size:.71rem;color:var(--mist);margin-top:1.2rem;line-height:1.5;text-align:center;">
-      Dữ liệu được mã hóa và lưu riêng biệt theo từng tài khoản.<br>
-      Đăng nhập từ bất kỳ thiết bị nào đều giữ nguyên dữ liệu.
-    </div>
+<div style="font-size:.71rem;color:var(--mist);margin-top:1.2rem;line-height:1.5;">
+  Dữ liệu được mã hóa và lưu riêng biệt theo từng tài khoản.<br>
+  Đăng nhập từ bất kỳ thiết bị nào đều giữ nguyên dữ liệu.
+</div>
+```
+
   </div>
 </div>
 
@@ -6613,73 +6666,35 @@ toast._t = setTimeout(() => el.classList.remove('show'), duration);
 <!-- Main Char Modal -->
 
 <div class="modal-overlay" id="main-char-modal" onclick="if(event.target===this)closeMainCharModal()">
-  <div class="modal-box" style="max-width:500px;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;">
+  <div class="modal-box" style="max-width:420px;">
     <div class="modal-icon">👤</div>
     <div class="modal-title">Tạo nhân vật chính với AI</div>
     <div class="modal-body">
-
-      <!-- Số lượng -->
-      <div class="form-group" style="margin-bottom:.65rem;">
+      <div class="form-group" style="margin-bottom:.6rem;">
         <label>Số lượng nhân vật chính</label>
-        <select id="mcm-count" style="margin-top:.25rem;" onchange="mcmUpdateGenderOptions()">
+        <select id="mcm-count" style="margin-top:.2rem;">
           <option value="1">1 nhân vật</option>
           <option value="2">2 nhân vật</option>
         </select>
       </div>
-
-      <!-- NV 1 -->
-      <div style="border:1px solid var(--border);border-radius:8px;padding:.65rem .75rem;margin-bottom:.5rem;background:rgba(201,168,76,.04);">
-        <div style="font-size:.78rem;font-weight:700;color:var(--gold);margin-bottom:.5rem;">⭐ Nhân vật chính 1</div>
-        <div class="grid2" style="gap:.5rem;margin-bottom:.5rem;">
-          <div class="form-group">
-            <label>Giới tính</label>
-            <select id="mcm-gender-1">
-              <option value="nữ">Nữ</option>
-              <option value="nam">Nam</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Độ tuổi</label>
-            <input id="mcm-age-1" type="text" placeholder="VD: 20, 18-22...">
-          </div>
+      <div class="grid2" style="gap:.5rem;margin-bottom:.6rem;">
+        <div class="form-group">
+          <label>Giới tính</label>
+          <select id="mcm-gender">
+            <option value="nữ">Nữ</option>
+            <option value="nam">Nam</option>
+            <option value="nam và nữ">Nam + Nữ</option>
+          </select>
         </div>
         <div class="form-group">
-          <label>Ý tưởng / mô tả *</label>
-          <textarea id="mcm-desc-1" style="min-height:60px;margin-top:.25rem;" placeholder="VD: lạnh lùng, bị phản bội, ẩn quá khứ đau thương..."></textarea>
-        </div>
-        <!-- Tính cách nhanh -->
-        <div style="margin-top:.4rem;">
-          <div style="font-size:.73rem;color:var(--mist);margin-bottom:.3rem;">Tính cách gợi ý (click để thêm):</div>
-          <div id="mcm-traits-1" style="display:flex;flex-wrap:wrap;gap:.3rem;"></div>
+          <label>Độ tuổi</label>
+          <input id="mcm-age" type="text" placeholder="VD: 20, 18-22...">
         </div>
       </div>
-
-      <!-- NV 2 (ẩn mặc định) -->
-      <div id="mcm-char2-box" style="display:none;border:1px solid var(--border);border-radius:8px;padding:.65rem .75rem;margin-bottom:.5rem;background:rgba(107,63,160,.04);">
-        <div style="font-size:.78rem;font-weight:700;color:var(--accent);margin-bottom:.5rem;">🌟 Nhân vật chính 2</div>
-        <div class="grid2" style="gap:.5rem;margin-bottom:.5rem;">
-          <div class="form-group">
-            <label>Giới tính</label>
-            <select id="mcm-gender-2">
-              <option value="nam">Nam</option>
-              <option value="nữ">Nữ</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Độ tuổi</label>
-            <input id="mcm-age-2" type="text" placeholder="VD: 23, 20-25...">
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Ý tưởng / mô tả</label>
-          <textarea id="mcm-desc-2" style="min-height:60px;margin-top:.25rem;" placeholder="VD: nóng tính, che giấu nội tâm mềm yếu..."></textarea>
-        </div>
-        <div style="margin-top:.4rem;">
-          <div style="font-size:.73rem;color:var(--mist);margin-bottom:.3rem;">Tính cách gợi ý:</div>
-          <div id="mcm-traits-2" style="display:flex;flex-wrap:wrap;gap:.3rem;"></div>
-        </div>
+      <div class="form-group" style="margin-bottom:.5rem;">
+        <label>Mô tả ý tưởng nhân vật *</label>
+        <textarea id="mcm-desc" style="min-height:72px;" placeholder="VD: lạnh lùng bề ngoài, ẩn chứa quá khứ đau thương, bị phản bội bởi người thân..."></textarea>
       </div>
-
       <div id="mcm-error" style="display:none;background:#fdecea;color:var(--rust);border-radius:5px;padding:.38rem .65rem;font-size:.82rem;margin-bottom:.4rem;"></div>
     </div>
     <div class="modal-btns">
