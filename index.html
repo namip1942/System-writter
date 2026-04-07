@@ -1495,8 +1495,10 @@ min-width: 120px;
         <span class="ai-icon">✨</span>
         <span class="ai-label"><strong>AI Gợi ý thế giới quan</strong> -- dựa vào thể loại đã chọn</span>
         <div style="display:flex;gap:.35rem;flex-wrap:wrap">
-          <button class="btn-ai" id="btn-ai-world-quick" onclick="aiSuggestWorld('quick')">⚡ Gợi ý nhanh</button>
-          <button class="btn-ai" id="btn-ai-world-detail" onclick="aiSuggestWorld('detail')">🌍 Gợi ý chi tiết</button>
+          <button class="btn-ai" id="btn-ai-world-era"      onclick="aiSuggestField('world','era')">🌍 Bối cảnh</button>
+          <button class="btn-ai" id="btn-ai-world-rules"    onclick="aiSuggestField('world','rules')">⚡ Hệ thống</button>
+          <button class="btn-ai" id="btn-ai-world-factions" onclick="aiSuggestField('world','factions')">⚔️ Thế lực</button>
+          <button class="btn-ai" id="btn-ai-world-place"    onclick="aiSuggestField('world','place')">📍 Địa điểm</button>
         </div>
       </div>
       <div class="suggest-topics" id="world-topics" style="margin-bottom:.6rem">
@@ -1548,9 +1550,11 @@ min-width: 120px;
         <span class="ai-icon">✨</span>
         <span class="ai-label"><strong>AI Gợi ý cốt truyện</strong> -- dựa vào nhân vật & thế giới đã nhập</span>
         <div style="display:flex;gap:.35rem;flex-wrap:wrap">
-          <button class="btn-ai" id="btn-ai-plot-conflict" onclick="aiSuggestPlot('conflict')">⚡ Xung đột</button>
-          <button class="btn-ai" id="btn-ai-plot-twist" onclick="aiSuggestPlot('twist')">🌀 Plot twist</button>
-          <button class="btn-ai" id="btn-ai-plot-full" onclick="aiSuggestPlot('full')">📖 Toàn bộ cốt truyện</button>
+          <button class="btn-ai" id="btn-ai-plot-conflict" onclick="aiSuggestField('plot','conflict')">💥 Xung đột</button>
+          <button class="btn-ai" id="btn-ai-plot-start"    onclick="aiSuggestField('plot','start')">🎬 Điểm bắt đầu</button>
+          <button class="btn-ai" id="btn-ai-plot-end"      onclick="aiSuggestField('plot','end')">🏁 Hướng kết thúc</button>
+          <button class="btn-ai" id="btn-ai-plot-twist"    onclick="aiSuggestField('plot','twist')">🌀 Plot twist</button>
+          <button class="btn-ai" id="btn-ai-plot-theme"    onclick="aiSuggestField('plot','theme')">💡 Chủ đề</button>
         </div>
       </div>
       <div class="ai-suggest-result" id="ai-result-plot">
@@ -4092,6 +4096,60 @@ if (charTab) switchBTab(charTab, 'chars');
 // ═══════════════════════════════════════════
 //  AI SUGGESTION SYSTEM
 // ═══════════════════════════════════════════
+
+// ── Read full current context including all filled fields ─────────────────
+function getFullContext() {
+  const title    = document.getElementById('c-title')?.value.trim() || '';
+  const genre    = document.getElementById('c-genre')?.value || '';
+  const sub      = typeof getSubGenreText === 'function' ? getSubGenreText() : '';
+  const tone     = getTone();
+  const chars    = document.getElementById('c-chars')?.value.trim() || '';
+
+  // World fields
+  const era      = document.getElementById('w-era')?.value.trim() || '';
+  const place    = document.getElementById('w-place')?.value.trim() || '';
+  const rules    = document.getElementById('w-rules')?.value.trim() || '';
+  const factions = document.getElementById('w-factions')?.value.trim() || '';
+  const vibe     = document.getElementById('w-vibe')?.value.trim() || '';
+
+  // Plot fields
+  const conflict = document.getElementById('p-conflict')?.value.trim() || '';
+  const start    = document.getElementById('p-start')?.value.trim() || '';
+  const end      = document.getElementById('p-end')?.value.trim() || '';
+  const twists   = document.getElementById('p-twists')?.value.trim() || '';
+  const theme    = document.getElementById('p-theme')?.value.trim() || '';
+
+  return { title, genre, sub, tone, chars, era, place, rules, factions, vibe, conflict, start, end, twists, theme };
+}
+
+// Build context summary string for prompts
+function buildContextSummary(ctx) {
+  const parts = [];
+  if (ctx.title)     parts.push('Tên truyện: 《' + ctx.title + '》');
+  if (ctx.genre)     parts.push('Thể loại: ' + ctx.genre + (ctx.sub ? ' + ' + ctx.sub : ''));
+  if (ctx.tone)      parts.push('Tone: ' + ctx.tone);
+  if (ctx.chars)     parts.push('Nhân vật: ' + ctx.chars.slice(0, 300));
+  if (ctx.era)       parts.push('Bối cảnh thời đại: ' + ctx.era);
+  if (ctx.place)     parts.push('Địa điểm: ' + ctx.place);
+  if (ctx.rules)     parts.push('Hệ thống: ' + ctx.rules.slice(0, 200));
+  if (ctx.factions)  parts.push('Phe phái: ' + ctx.factions.slice(0, 150));
+  if (ctx.vibe)      parts.push('Vibe: ' + ctx.vibe);
+  if (ctx.conflict)  parts.push('Xung đột: ' + ctx.conflict.slice(0, 200));
+  if (ctx.start)     parts.push('Mở đầu: ' + ctx.start.slice(0, 150));
+  if (ctx.end)       parts.push('Kết thúc: ' + ctx.end.slice(0, 100));
+  if (ctx.twists)    parts.push('Twist: ' + ctx.twists.slice(0, 150));
+  if (ctx.theme)     parts.push('Chủ đề: ' + ctx.theme);
+  return parts.join('\n');
+}
+
+// Build instruction for a field: empty = create freely, filled = improve/expand
+function fieldInstruction(label, currentVal, emptyHint, filledHint) {
+  if (!currentVal) {
+    return label + ': [' + emptyHint + ']';
+  }
+  return label + ' (hiện tại: "' + currentVal.slice(0, 80) + (currentVal.length > 80 ? '...' : '') + '"): [' + filledHint + ']';
+}
+
 function getContext() {
 const title = document.getElementById('c-title')?.value.trim() || '';
 const genre = document.getElementById('c-genre')?.value || '';
@@ -4157,27 +4215,82 @@ function applyCharSuggest() {
 toast('\ud83d\udca1 \u0110\u1ecdc g\u1ee3i \xfd v\xe0 nh\u1eadp v\xe0o t\u1eebng \xf4 nh\xe2n v\u1eadt!', 4000);
 }
 
+// Single-field AI suggest
+async function aiSuggestField(tab, field) {
+  const ctx = getFullContext();
+  if (!ctx.genre) { toast('\u26a0\ufe0f Ch\u1ecdn th\u1ec3 lo\u1ea1i!'); return; }
+  const btn = document.getElementById('btn-ai-' + tab + '-' + field);
+  if (btn) { btn._orig = btn.textContent; btn.disabled = true; btn.textContent = '\u23f3'; }
+  const summary = buildContextSummary(ctx);
+  const cfg = {
+    era:      { label:'B\u1ed1i c\u1ea3nh th\u1eddi \u0111\u1ea1i', cur:ctx.era,      id:'w-era',      tok:120, task:'M\xf4 t\u1ea3 th\u1eddi \u0111\u1ea1i & b\u1ed1i c\u1ea3nh x\xe3 h\u1ed9i c\u1ee5 th\u1ec3, s\u1ed1ng \u0111\u1ed9ng (1-2 c\xe2u).' },
+    rules:    { label:'Quy t\u1eafc & H\u1ec7 th\u1ed1ng', cur:ctx.rules,    id:'w-rules',    tok:180, task:'M\xf4 t\u1ea3 h\u1ec7 th\u1ed1ng \u0111\u1eb7c bi\u1ec7t (tu luy\u1ec7n/ma ph\xe1p/c\xf4ng ngh\u1ec7...) c\xf3 logic r\xf5 r\xe0ng (2-3 c\xe2u).' },
+    factions: { label:'Th\u1ebf l\u1ef1c & Phe ph\xe1i', cur:ctx.factions, id:'w-factions', tok:150, task:'Li\u1ec7t k\xea 2-3 phe ph\xe1i v\xe0 xung \u0111\u1ed9t gi\u1eefa c\xe1c b\xean.' },
+    place:    { label:'\u0110\u1ecba \u0111i\u1ec3m ch\xednh', cur:ctx.place,    id:'w-place',    tok:100, task:'T\xean \u0111\u1ecba \u0111i\u1ec3m + \u0111\u1eb7c tr\u01b0ng n\u1ed5i b\u1eadt (1 c\xe2u).' },
+    conflict: { label:'Xung \u0111\u1ed9t c\u1ed1t l\xf5i', cur:ctx.conflict, id:'p-conflict', tok:150, task:'M\xe2u thu\u1eabn c\u1ed1t l\xf5i th\xfa \u0111\u1ea9y to\xe0n b\u1ed9 c\xe2u chuy\u1ec7n (1-2 c\xe2u).' },
+    start:    { label:'\u0110i\u1ec3m b\u1eaft \u0111\u1ea7u', cur:ctx.start,   id:'p-start',    tok:130, task:'C\u1ea3nh m\u1edf \u0111\u1ea7u \u1ea5n t\u01b0\u1ee3ng k\xe9o ng\u01b0\u1eddi \u0111\u1ecdc v\xe0o ngay (2-3 c\xe2u).' },
+    end:      { label:'H\u01b0\u1edbng k\u1ebft th\xfac', cur:ctx.end,     id:'p-end',      tok:100, task:'H\u01b0\u1edbng k\u1ebft th\xfac ph\xf9 h\u1ee3p tone + l\xfd do (1 c\xe2u).' },
+    twist:    { label:'Plot twist & Cao tr\xe0o', cur:ctx.twists,  id:'p-twists',   tok:180, task:'1-2 plot twist b\u1ea5t ng\u1edd nh\u01b0ng h\u1ee3p l\xfd, ghi r\xf5 \u0111i\u1ec3m n\u1eb1m trong truy\u1ec7n.' },
+    theme:    { label:'Ch\u1ee7 \u0111\u1ec1 & Th\xf4ng \u0111i\u1ec7p', cur:ctx.theme,   id:'p-theme',    tok:80,  task:'Th\xf4ng \u0111i\u1ec7p c\u1ed1t l\xf5i c\u1ee7a truy\u1ec7n (1 c\xe2u ng\u1eafn).' },
+  };
+  const f = cfg[field];
+  if (!f) return;
+  const existing = f.cur
+    ? '(Hi\u1ec7n t\u1ea1i: "' + f.cur.slice(0,100) + '") C\u1ea3i thi\u1ec7n/b\u1ed5 sung.'
+    : 'Ch\u01b0a c\xf3 n\u1ed9i dung. S\xe1ng t\u1ea1o ph\xf9 h\u1ee3p th\u1ec3 lo\u1ea1i.';
+  const p = 'Nh\xe0 v\u0103n ' + ctx.genre + (ctx.tone ? ', tone ' + ctx.tone : '') + '.\n'
+    + summary + '\n\n'
+    + 'Nhi\u1ec7m v\u1ee5: G\u1ee3i \xfd "' + f.label + '".\n'
+    + existing + '\n'
+    + f.task + '\n'
+    + 'CH\u1ec6 XU\u1ea4T N\u1ed8I DUNG, kh\xf4ng gi\u1ea3i th\xedch. Ti\u1ebfng Vi\u1ec7t.';
+  try {
+    const result = await callClaude(p, f.tok, 0.85);
+    const clean = result.trim().replace(/^#+\s*/, '').replace(/^[-\u2022]\s*/, '');
+    const el = document.getElementById(f.id);
+    if (el) el.value = clean;
+    if (tab === 'world') buildWorldText();
+    if (tab === 'plot')  buildPlotText();
+    triggerAutosave();
+    toast('\u2705 \u0110\xe3 \u0111i\u1ec1n "' + f.label + '"!');
+  } catch(e) { toast('\u274c ' + e.message, 4000); }
+  if (btn) { btn.disabled = false; btn.textContent = btn._orig || btn.textContent; }
+}
+
 async function aiSuggestWorld(mode) {
-  const { genre, sub, chars, plot, tone } = getContext();
-  if (!genre) { toast('\u26a0\ufe0f Ch\u1ecdn th\u1ec3 lo\u1ea1i tr\u01b0\u1edbc!'); return; }
+  const ctx = getFullContext();
+  if (!ctx.genre) { toast('⚠️ Chọn thể loại trước!'); return; }
   const btnId = mode==='quick'?'btn-ai-world-quick':'btn-ai-world-detail';
   const btn = document.getElementById(btnId);
   if(btn){ btn.disabled=true; btn.textContent='...'; }
-  const p = 'X\xe2y d\u1ef1ng th\u1ebf gi\u1edbi quan cho truy\u1ec7n ' + genre + (sub?' + '+sub:'') + (tone?', tone '+tone:'') + '.' +
-    (chars?'\nNV: '+chars.slice(0,150):'') + (plot?'\nC\u1ed1t: '+plot.slice(0,100):'') +
-    '\nTr\u1ea3 l\u1eddi \u0111\xfang format n\xe0y (ng\u1eafn g\u1ecdn, c\u1ee5 th\u1ec3):\nB\u1ed1i c\u1ea3nh th\u1eddi \u0111\u1ea1i: [m\xf4 t\u1ea3]\n\u0110\u1ecba \u0111i\u1ec3m ch\xednh: [t\xean + \u0111\u1eb7c tr\u01b0ng]\nQuy t\u1eafc & H\u1ec7 th\u1ed1ng: [2-3 c\xe2u]\nPhe ph\xe1i & T\u1ed5 ch\u1ee9c: [c\xe1c phe + xung \u0111\u1ed9t]\nKh\xf4ng kh\xed & Vibe: [1 c\xe2u]\nTi\u1ebfng Vi\u1ec7t.';
+
+  const summary = buildContextSummary(ctx);
+  const hasWorld = ctx.era || ctx.place || ctx.rules || ctx.factions || ctx.vibe;
+  const intro = hasWorld
+    ? 'Dựa vào nội dung đã có, hãy phân tích và đưa ra gợi ý bổ sung/cải thiện nhất quán với thả loại.'
+    : 'Sáng tạo thế giới quan độc đáo, phù hợp thể loại.';
+
+  const p = 'Thông tin hiện tại:\n' + summary + '\n\n' + intro +
+    '\n\nTrả lời đúng format:\n' +
+    fieldInstruction('Bối cảnh thời đại', ctx.era, 'mô tả thời đại', 'cải thiện/mở rộng') + '\n' +
+    fieldInstruction('Địa điểm chính', ctx.place, 'tên + đặc trưng', 'cải thiện') + '\n' +
+    fieldInstruction('Quy tắc & Hệ thống', ctx.rules, 'hệ thống đặc biệt', 'bổ sung/cải thiện') + '\n' +
+    fieldInstruction('Phe phái & Tổ chức', ctx.factions, 'các phe + xung đột', 'bổ sung') + '\n' +
+    fieldInstruction('Không khí & Vibe', ctx.vibe, '1 câu đặc trưng', 'cải thiện') +
+    '\nTiếng Việt.';
+
   try {
-    const result = await callClaude(p, 350, 0.85);
+    const result = await callClaude(p, 400, 0.85);
     lastWorldSuggest = result;
     const cEl=document.getElementById('ai-result-world-content'),rEl=document.getElementById('ai-result-world');
     if(cEl)cEl.textContent=result; if(rEl)rEl.classList.add('show');
     const lines=result.split('\n');
-    const get=(...kws)=>{for(const kw of kws){const ln=lines.find(l=>l.toLowerCase().trim().startsWith(kw.toLowerCase()));if(!ln)continue;const v=ln.replace(/^[^:\uff1a]+[:\uff1a]\s*/,'').replace(/^\[|\]$/g,'').trim();if(v&&v.length>2)return v;}return '';};
-    const era=get('b\u1ed1i c\u1ea3nh th\u1eddi \u0111\u1ea1i','b\u1ed1i c\u1ea3nh');
-    const place=get('\u0111\u1ecba \u0111i\u1ec3m ch\xednh','\u0111\u1ecba \u0111i\u1ec3m');
-    const rules=get('quy t\u1eafc & h\u1ec7 th\u1ed1ng','h\u1ec7 th\u1ed1ng','quy t\u1eafc');
-    const fac=get('phe ph\xe1i & t\u1ed5 ch\u1ee9c','phe ph\xe1i','t\u1ed5 ch\u1ee9c');
-    const vibe=get('kh\xf4ng kh\xed & vibe','kh\xf4ng kh\xed');
+    const get=(...kws)=>{for(const kw of kws){const ln=lines.find(l=>l.toLowerCase().trim().startsWith(kw.toLowerCase()));if(!ln)continue;const v=ln.replace(/^[^:：]+[:：]\s*/,'').replace(/^\[|\]$/g,'').trim();if(v&&v.length>2)return v;}return '';};
+    const era=get('bối cảnh thời đại','bối cảnh');
+    const place=get('địa điểm chính','địa điểm');
+    const rules=get('quy tắc & hệ thống','hệ thống','quy tắc');
+    const fac=get('phe phái & tổ chức','phe phái','tổ chức');
+    const vibe=get('không khí & vibe','không khí');
     let n=0;
     if(era){document.getElementById('w-era').value=era;n++;}
     if(place){document.getElementById('w-place').value=place;n++;}
@@ -4185,9 +4298,9 @@ async function aiSuggestWorld(mode) {
     if(fac){document.getElementById('w-factions').value=fac;n++;}
     if(vibe){document.getElementById('w-vibe').value=vibe;n++;}
     buildWorldText();triggerAutosave();
-    toast('\u2705 \u0110\xe3 \u0111i\u1ec1n '+n+' tr\u01b0\u1eddng!');
-  } catch(e){toast('\u274c '+e.message,4000);}
-  if(btn){btn.disabled=false;btn.textContent=mode==='quick'?'\u26a1 G\u1ee3i \xfd nhanh':'\ud83c\udf0d G\u1ee3i \xfd chi ti\u1ebft';}
+    toast('✅ Đã điền '+n+' trường!');
+  } catch(e){toast('❌ '+e.message,4000);}
+  if(btn){btn.disabled=false;btn.textContent=mode==='quick'?'⚡ Gợi ý nhanh':'?? Gợi ý chi tiết';}
 }
 
 
@@ -4232,30 +4345,45 @@ lastWorldSuggest = await runAiSuggest('btn-ai-world-quick', 'ai-result-world', '
 }
 
 async function aiSuggestPlot(type) {
-  const { genre, sub, chars, world, tone } = getContext();
-  if (!genre) { toast('\u26a0\ufe0f Ch\u1ecdn th\u1ec3 lo\u1ea1i tr\u01b0\u1edbc!'); return; }
+  const ctx = getFullContext();
+  if (!ctx.genre) { toast('⚠️ Chọn thể loại trước!'); return; }
   const bm={conflict:'btn-ai-plot-conflict',twist:'btn-ai-plot-twist',full:'btn-ai-plot-full'};
   const btn=document.getElementById(bm[type]);
   if(btn){btn.disabled=true;btn.textContent='...';}
-  const tn=tone?', tone '+tone:'';
-  const fmt='\nTr\u1ea3 l\u1eddi \u0111\xfang format:\nXung \u0111\u1ed9t ch\xednh: [m\xf4 t\u1ea3]\nM\u1edf \u0111\u1ea7u: [c\u1ea3nh kh\u1edfi \u0111\u1ed9ng]\nH\u01b0\u1edbng k\u1ebft th\xfac: [lo\u1ea1i ending]\nTwist/B\u1ea5t ng\u1edd: [n\u1ed9i dung]\nCh\u1ee7 \u0111\u1ec1: [th\xf4ng \u0111i\u1ec7p]\nTi\u1ebfng Vi\u1ec7t.';
+
+  const summary = buildContextSummary(ctx);
+  const hasPlot = ctx.conflict || ctx.start || ctx.end || ctx.twists || ctx.theme;
+  const intro = hasPlot
+    ? 'Dựa vào cốt truyện đã có, hãy phân tích và đưa ra gợi ý bổ sung/cải thiện nhất quán.'
+    : 'Sáng tạo cốt truyện hấp dẫn, phù hợp thể loại và nhân vật.';
+
+  const fmt = '\n\nTrả lời đúng format:\n' +
+    fieldInstruction('Xung đột chính', ctx.conflict, 'mâu thuẫn', 'cải thiện') + '\n' +
+    fieldInstruction('Mở đầu', ctx.start, 'cảnh khởi động', 'cải thiện') + '\n' +
+    fieldInstruction('Hướng kết thúc', ctx.end, 'loại ending', 'cải thiện') + '\n' +
+    fieldInstruction('Twist/Bất ngờ', ctx.twists, 'plot twist', 'bổ sung') + '\n' +
+    fieldInstruction('Chủ đề', ctx.theme, 'thông điệp', 'cải thiện') +
+    '\nTiếng Việt.';
+
+  const base = 'Thông tin hiện tại:\n' + summary + '\n\n' + intro + fmt;
   const ps={
-    conflict:'Nh\xe0 v\u0103n '+genre+tn+'. NV: '+chars.slice(0,150)+'. G\u1ee3i \xfd xung \u0111\u1ed9t hay nh\u1ea5t.'+fmt,
-    twist:'Nh\xe0 v\u0103n '+genre+tn+'. NV: '+chars.slice(0,150)+'. G\u1ee3i \xfd plot twist h\u1ea5p d\u1eabn.'+fmt,
-    full:'Nh\xe0 v\u0103n '+genre+tn+'. NV: '+chars.slice(0,150)+'. TG: '+world.slice(0,100)+'. X\xe2y d\u1ef1ng c\u1ed1t truy\u1ec7n ho\xe0n ch\u1ec9nh.'+fmt
+    conflict: base + '\n(Tập trung xung đột và mở đầu.)',
+    twist:    base + '\n(Tập trung twist bất ngờ hợp lý.)',
+    full:     base
   };
+
   try {
-    const result=await callClaude(ps[type],350,0.85);
+    const result=await callClaude(ps[type],400,0.85);
     lastPlotSuggest=result;
     const cEl=document.getElementById('ai-result-plot-content'),rEl=document.getElementById('ai-result-plot');
     if(cEl)cEl.textContent=result;if(rEl)rEl.classList.add('show');
     const lines=result.split('\n');
-    const get=(...kws)=>{for(const kw of kws){const ln=lines.find(l=>l.toLowerCase().trim().startsWith(kw.toLowerCase()));if(!ln)continue;const v=ln.replace(/^[^:\uff1a]+[:\uff1a]\s*/,'').replace(/^\[|\]$/g,'').trim();if(v&&v.length>2)return v;}return '';};
-    const conflict=get('xung \u0111\u1ed9t ch\xednh','xung \u0111\u1ed9t');
-    const start2=get('m\u1edf \u0111\u1ea7u');
-    const ending=get('h\u01b0\u1edbng k\u1ebft th\xfac','k\u1ebft th\xfac');
-    const twist=get('twist/b\u1ea5t ng\u1edd','twist','b\u1ea5t ng\u1edd');
-    const theme=get('ch\u1ee7 \u0111\u1ec1','th\xf4ng \u0111i\u1ec7p');
+    const get=(...kws)=>{for(const kw of kws){const ln=lines.find(l=>l.toLowerCase().trim().startsWith(kw.toLowerCase()));if(!ln)continue;const v=ln.replace(/^[^:：]+[:：]\s*/,'').replace(/^\[|\]$/g,'').trim();if(v&&v.length>2)return v;}return '';};
+    const conflict=get('xung đột chính','xung đột');
+    const start2=get('mở đầu');
+    const ending=get('hướng kết thúc','kết thúc');
+    const twist=get('twist/bất ngờ','twist','bất ngờ');
+    const theme=get('chủ đề','thông điệp');
     let n=0;
     if(conflict){document.getElementById('p-conflict').value=conflict;n++;}
     if(start2){document.getElementById('p-start').value=start2;n++;}
@@ -4263,9 +4391,9 @@ async function aiSuggestPlot(type) {
     if(twist){document.getElementById('p-twists').value=twist;n++;}
     if(theme){document.getElementById('p-theme').value=theme;n++;}
     buildPlotText();triggerAutosave();
-    toast('\u2705 \u0110\xe3 \u0111i\u1ec1n '+n+' tr\u01b0\u1eddng c\u1ed1t truy\u1ec7n!');
-  } catch(e){toast('\u274c '+e.message,4000);}
-  const lb={conflict:'\u26a1 Xung \u0111\u1ed9t',twist:'\ud83c\udf00 Plot twist',full:'\ud83d\udcd6 To\xe0n b\u1ed9'};
+    toast('✅ Đã điền '+n+' trường cốt truyện!');
+  } catch(e){toast('❌ '+e.message,4000);}
+  const lb={conflict:'⚡ Xung đột',twist:'?? Plot twist',full:'?? Toàn bộ'};
   if(btn){btn.disabled=false;btn.textContent=lb[type];}
 }
 
