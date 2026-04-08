@@ -2585,6 +2585,8 @@ async function submitMainCharModal() {
   const tone  = document.getElementById('c-tone-custom')?.value.trim() || '';
   const plot  = document.getElementById('c-plot')?.value.trim().slice(0,100) || '';
 
+  const gRule = getGenreGenderRule(genre);
+  const gNote = gRule ? '\nQUY TắC GIỚI TÍNH BẮT BUỘC: ' + gRule.rule : '';
   const prompt =
     `Tạo ${count} nhân vật chính cho truyện ${genre}${tone?', tone '+tone:''}.${plot?'\\nCốt truyện: '+plot:''}
 Yêu cầu: ${gender}${age?', '+age+' tuổi':''}, ý tưởng: ${desc}
@@ -4129,6 +4131,8 @@ async function aiSuggestCharField(charId, field, isMain) {
   if (btn) { btn._orig = btn.textContent; btn.disabled = true; btn.textContent = '\u23f3'; }
 
   const summary = buildContextSummary(ctx);
+  const genderRule = getGenreGenderRule(ctx.genre);
+  const genderNote = genderRule ? '\nQUY TẮC GIỚI TÍNH: ' + genderRule.rule : '';
   const charInfo = 'T\xean: ' + (ch.name||'?') + (ch.gender?', '+ch.gender:'') + (ch.age?', '+ch.age+' tu\u1ed5i':'') +
     (ch.role?'\nVai tr\xf2: '+ch.role:'') + (ch.personality?'\nT\xednh c\xe1ch: '+ch.personality:'');
 
@@ -4169,6 +4173,17 @@ async function aiSuggestCharField(charId, field, isMain) {
     toast('\u2705 \u0110\xe3 g\u1ee3i \xfd "' + field + '" cho ' + (ch.name||'nh\xe2n v\u1eadt') + '!');
   } catch(e) { toast('\u274c ' + e.message, 4000); }
   if (btn) { btn.disabled = false; btn.textContent = btn._orig || '\u2728'; }
+}
+
+// ── Gender rule based on genre ───────────────────────────────────────────────
+function getGenreGenderRule(genre) {
+  const gl = ['Bách hợp'];
+  const bl = ['Đam mỹ'];
+  const het = ['Ngôn tình', 'Đô thị ngôn tình', 'Cổ đại ngôn tình', 'Hào môn', 'Ngọ t sủng', 'Điền văn', 'Học đường tình cảm', 'Cầu đấu'];
+  if (gl.includes(genre)) return { rule: 'Bách hợp: cả 2 nhân vật chính phải là nữ, tên và tính cách theo nữ.', gender1: 'nữ', gender2: 'nữ' };
+  if (bl.includes(genre)) return { rule: 'Đam mỹ: cả 2 nhân vật chính phải là nam, tên và tính cách theo nam.', gender1: 'nam', gender2: 'nam' };
+  if (het.includes(genre)) return { rule: 'Ngôn tình: 1 nam + 1 nữ, tên và tính cách phù hợp giới tính.', gender1: 'nữ', gender2: 'nam' };
+  return null;
 }
 
 // Single-field AI suggest
@@ -4617,8 +4632,42 @@ const SUBGENRE_MAP = {
 // Default sub-genres khi không có map cụ thể
 const DEFAULT_SUBGENRES = {
 'Yếu tố phụ': ['💕 Ngôn tình', '🌸 Bách hợp', '🌙 Đam mỹ', '🔍 Phá án', '🏯 Cung đấu', '😂 Hài hước', '🌑 Hắc ám'],
-'Thêm': ['🔄 Trọng sinh/Xuyên không', '⚡ Hệ thống/Kim chỉ', '🔥 Sảng văn', '📚 Văn học'],
+'Thêm': ['🔄 Trọng sinh', '🌀 Xuyên không', '🌀 Xuyên nhanh', '⚡ Hệ thống', '⚡ Kim chỉ', '🔥 Sảng văn', '📚 Văn học'],
 };
+
+// ── Extra entries for genres missing from map ─────────────────────────────
+Object.assign(SUBGENRE_MAP, {
+'Trọng sinh': {
+  'Bối cảnh': ['🏙️ Đô thị hiện đại', '🏯 Cổ đại', '🐉 Tu tiên/Tiên Hiệp', '🔮 Ma pháp dị giới', '🎓 Học đường', '⚔️ Võ hiệp', '🚀 Tương lai'],
+  'Yếu tố phụ': ['💕 Ngôn tình', '🌸 Bách hợp', '🌙 Đam mỹ', '💼 Thương chiến', '🎬 Showbiz', '🔥 Sảng văn phản kích', '🏆 Vả mặt kẻ xấu'],
+  'Thêm': ['⚡ Hệ thống/Kim chỉ', '👑 Nữ cường', '😂 Hài hước', '🌑 Hắc ám'],
+},
+'Xuyên không': {
+  'Đến đâu': ['🏯 Cổ đại Trung Hoa', '🐉 Thế giới Tu tiên', '🔮 Thế giới Ma pháp', '⚔️ Thế giới Võ hiệp', '🌀 Thế giới sách/truyện', '🚀 Tương lai'],
+  'Yếu tố phụ': ['💕 Ngôn tình', '🌸 Bách hợp', '🌙 Đam mỹ', '🏯 Cung đấu', '⚡ Hệ thống', '🔥 Sảng văn', '😂 Hài hước'],
+  'Thêm': ['🔄 Trọng sinh kết hợp', '👑 Nữ cường', '🏆 Vả mặt nguyên thân'],
+},
+'Xuyên nhanh': {
+  'Nhiệm vụ': ['💕 Cưa cẩm nhân vật', '🌸 Bách hợp xuyên nhanh', '🌙 Đam mỹ xuyên nhanh', '😈 Làm phản diện', '🔄 Hoàn thành tâm nguyện'],
+  'Thể giới đến': ['🏯 Cổ đại', '🐉 Tu tiên', '🎓 Học đường', '🏙️ Đô thị', '🎬 Showbiz', '⚔️ Tận thế', '🎮 Game'],
+  'Màu sắc': ['😂 Hài hước', '🍬 Ngọt sủng', '🌑 Hắc ám', '🔥 Sảng văn', '📚 Văn học'],
+},
+'Ngôn tình': {
+  'Bối cảnh': ['🏙️ Đô thị hiện đại', '🏯 Cổ đại', '🎓 Học đường', '🏰 Hào môn', '🎬 Showbiz', '🏥 Y thuật', '💼 Thương chiến'],
+  'Yếu tố phụ': ['🔍 Phá án', '⚡ Hệ thống/Kim chỉ', '🔄 Trọng sinh', '🌀 Xuyên không', '👁️ Siêu nhiên', '😂 Hài hước'],
+  'Màu sắc': ['🍬 Ngọt sủng', '🌑 Ngược tâm', '🌑 Tiên hôn sau ngọt', '🔥 Sảng văn', '📚 Văn học tình cảm'],
+},
+'Sảng văn': {
+  'Chủ thể': ['💪 Nữ chủ vô địch', '👑 Nam chủ bá đạo', '🌸 Bách hợp sảng', '🌙 Đam mỹ sảng', '😈 Phản diện sảng'],
+  'Bối cảnh': ['🏙️ Đô thị', '🏯 Cổ đại', '🐉 Tu tiên', '🎓 Học đường', '🎬 Showbiz', '⚔️ Tận thế'],
+  'Yếu tố': ['🔥 Vả mặt liên tục', '🏆 Thăng cấp nhanh', '💕 Tình yêu theo sau', '😂 Hài hước', '⚡ Hệ thống hỗ trợ'],
+},
+'Hắc ám': {
+  'Kiểu': ['😈 Nhân vật phản diện là chính', '🌑 Tâm lý tội phạm', '🩸 Bạo lực sinh tồn', '🧠 Thao túng tâm lý'],
+  'Bối cảnh': ['🏙️ Đô thị ngầm', '🏯 Cổ đại tranh đoạt', '⚔️ Chiến tranh', '🔮 Thế giới tối'],
+  'Thêm': ['💕 Ngôn tình hắc ám', '🌸 Bách hợp hắc', '🌙 Đam mỹ hắc', '🔄 Trọng sinh phục thù'],
+},
+});
 
 let selectedSubGenres = [];
 
@@ -5016,48 +5065,62 @@ const plot = document.getElementById('c-plot').value.trim();
 const regChars = buildRegisteredCharsText();
 const regNames = getRegisteredCharNames();
 
-const prompt = `Bạn là nhà văn chuyên nghiệp. Hãy tạo dàn ý cho tiểu thuyết sau.
+// Flexible token: ~75 tokens/chapter, min 400, max 4000
+const maxTok = Math.min(Math.max(chapters * 75, 400), 4000);
 
-Tên: 《${title}》
-Thể loại chính: ${genre}${subGenreText ? `\nThể loại phụ: ${subGenreText}` : ''}
-${regChars ? `Nhân vật đã khai báo (chỉ dùng các nhân vật này):\n${regChars}` : `Nhân vật: ${chars}`}
-Thế giới: ${world}
-Cốt truyện: ${plot}
-${regNames ? `⚠️ Chỉ sử dụng các nhân vật đã khai báo: ${regNames}. KHÔNG thêm nhân vật mới ngoài danh sách này.` : ''}
-
-QUAN TRỌNG: Phải viết đúng ${chapters} chương, không được ít hơn, không được nhiều hơn.
-Đánh số từ Chương 1 đến Chương ${chapters}.
-
-Định dạng mỗi dòng (bắt buộc):
-Chương 1: [Tên chương] - [Mô tả 40-60 từ]
-Chương 2: [Tên chương] - [Mô tả 40-60 từ]
-...
-Chương ${chapters}: [Tên chương] - [Mô tả 40-60 từ]
-
-Cấu trúc: 25% mở đầu - 50% phát triển cao trào - 25% kết thúc.
-Mỗi chương phải có xung đột hoặc bước ngoặt cụ thể.${subGenreText ? `\nKết hợp yếu tố thể loại phụ: ${subGenreText}` : ''}
-CHỈ xuất ${chapters} dòng dàn ý, KHÔNG giải thích, KHÔNG thêm bất kỳ nội dung nào khác.`;
+const prompt = 'Tạo dàn ý ' + chapters + ' chương cho tiểu thuyết ' + genre + (subGenreText ? ' + ' + subGenreText : '') + '.\n' +
+  '《' + title + '》\n' +
+  (regChars ? 'Nhân vật (chỉ dùng các NV này):\n' + regChars : (chars ? 'NV: ' + chars : '')) +
+  (world ? '\nThế giới: ' + world : '') +
+  (plot ? '\nCốt: ' + plot : '') +
+  (regNames ? '\n⚠️ Chỉ dùng NV: ' + regNames : '') +
+  '\n\nXuất đúng ' + chapters + ' dòng, mỗi dòng:\n' +
+  'Chương N: [Tên] - [Mô tả 30-50 từ, có xung đột/bước ngoặt]\n\n' +
+  'Cấu trúc: 25% mở đầu, 50% cao trào, 25% kết thúc. CHỆ xuất dàn ý, không giải thích.';
 
 const btn = document.getElementById('btn-gen-outline');
 btn.disabled = true;
-btn.innerHTML = '<span class="spinner"></span> Đang tạo...';
-// Show outline section with loading state
+btn.innerHTML = '<span class="spinner"></span> Đang tạo dàn ý...';
+
+// Show progress UI
 document.getElementById('outline-section').style.display = 'block';
-document.getElementById('c-outline').value = '⏳ Đang tạo dàn ý...';
+document.getElementById('c-outline').value = '';
+
+// Show inline progress bar near button
+let progWrap = document.getElementById('outline-gen-progress');
+if (!progWrap) {
+  progWrap = document.createElement('div');
+  progWrap.id = 'outline-gen-progress';
+  progWrap.style.cssText = 'margin-top:.6rem;';
+  progWrap.innerHTML = '<div style="font-size:.78rem;color:var(--mist);margin-bottom:.3rem;">⏳ AI đang tạo dàn ý ' + chapters + ' chương, vui lòng chờ...</div><div class="progress-bar-wrap"><div id="outline-gen-bar" class="progress-bar" style="width:0%;transition:width 0.5s ease;"></div></div>';
+  btn.parentNode.insertBefore(progWrap, btn.nextSibling);
+}
+progWrap.style.display = 'block';
+
+// Animate progress bar (fake progress since we don't know when it ends)
+const bar = document.getElementById('outline-gen-bar');
+let pct = 0;
+const progTimer = setInterval(() => {
+  pct = Math.min(pct + (pct < 60 ? 3 : pct < 85 ? 1 : 0.3), 92);
+  if (bar) bar.style.width = pct + '%';
+}, 800);
 
 try {
-const outline = await callClaude(prompt, Math.max(4096, chapters * 120), 0.7);
+const outline = await callClaude(prompt, maxTok, 0.7);
+clearInterval(progTimer);
+if (bar) bar.style.width = '100%';
+setTimeout(() => { if (progWrap) progWrap.style.display = 'none'; }, 1000);
 document.getElementById('c-outline').value = outline;
 updateOutlineUI(outline);
 triggerAutosave();
-toast('✅ Dàn ý đã tạo! Xem lại rồi nhấn 💾 Lưu dàn ý.');
+toast('✅ Dàn ý ' + chapters + ' chương đã tạo xong! Xem lại rồi nhấn 💾 Lưu dàn ý.', 5000);
 } catch(e) {
+clearInterval(progTimer);
+if (progWrap) progWrap.style.display = 'none';
 document.getElementById('c-outline').value = '';
 document.getElementById('outline-section').style.display = 'none';
 toast('❌ ' + e.message, 5000);
-console.error('generateOutline error:', e);
-}
-finally {
+} finally {
 btn.disabled = false;
 btn.innerHTML = '🗺️ Tạo dàn ý trước';
 }
@@ -6327,6 +6390,63 @@ download(`DÀN Ý: ${title}\n${'='.repeat(40)}\n\n${outline}`, title + '-dan-y.t
 // ═══════════════════════════════════════════
 //  PROJECT LIST
 // ═══════════════════════════════════════════
+
+function openProjectDetail(id) {
+  const p = projects.find(x => x.id === id);
+  if (!p) return;
+
+  let modal = document.getElementById('proj-detail-modal');
+  if (modal) modal.remove();
+  modal = document.createElement('div');
+  modal.id = 'proj-detail-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(26,18,8,.55);display:flex;align-items:center;justify-content:center;padding:1rem;';
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+  document.body.appendChild(modal);
+
+  const pct = Math.round((p.completed||0)/p.chapters*100);
+  const outlineLines = (p.outline||'').split('\n').filter(l=>l.trim()).slice(0,5);
+
+  let html = '<div style="background:var(--panel);border-radius:14px;max-width:600px;width:100%;max-height:85vh;overflow-y:auto;padding:1.5rem;box-shadow:0 8px 40px rgba(26,18,8,.25);">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">';
+  html += '<div><div style="font-family:Playfair Display,serif;font-size:1.3rem;font-weight:700;">\u300a' + p.title + '\u300b</div>';
+  html += '<div style="font-size:.82rem;color:var(--mist);margin-top:.2rem;">' + (p.genre||'') + ' \xb7 ' + (p.date||'') + '</div></div>';
+  html += '<button onclick="document.getElementById(\'proj-detail-modal\').remove()" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--mist);">\u2715</button></div>';
+
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:1rem;">';
+  html += '<div style="background:var(--cream);border-radius:8px;padding:.6rem;text-align:center;"><div style="font-size:1.4rem;font-weight:700;color:var(--gold);">' + p.chapters + '</div><div style="font-size:.72rem;color:var(--mist);">T\u1ed5ng ch\u01b0\u01a1ng</div></div>';
+  html += '<div style="background:var(--cream);border-radius:8px;padding:.6rem;text-align:center;"><div style="font-size:1.4rem;font-weight:700;color:var(--forest);">' + (p.completed||0) + '</div><div style="font-size:.72rem;color:var(--mist);">\u0110\xe3 vi\u1ebft</div></div>';
+  html += '<div style="background:var(--cream);border-radius:8px;padding:.6rem;text-align:center;"><div style="font-size:1.4rem;font-weight:700;">' + pct + '%</div><div style="font-size:.72rem;color:var(--mist);">Ho\xe0n th\xe0nh</div></div></div>';
+
+  if (p.chars) html += '<div style="margin-bottom:.8rem;"><div style="font-size:.75rem;font-weight:700;text-transform:uppercase;color:var(--mist);margin-bottom:.3rem;">Nh\xe2n v\u1eadt</div><div style="font-size:.85rem;">' + p.chars.slice(0,200) + (p.chars.length>200?'...':'') + '</div></div>';
+  if (p.world) html += '<div style="margin-bottom:.8rem;"><div style="font-size:.75rem;font-weight:700;text-transform:uppercase;color:var(--mist);margin-bottom:.3rem;">Th\u1ebf gi\u1edbi quan</div><div style="font-size:.85rem;">' + p.world.slice(0,200) + (p.world.length>200?'...':'') + '</div></div>';
+  if (p.plot) html += '<div style="margin-bottom:.8rem;"><div style="font-size:.75rem;font-weight:700;text-transform:uppercase;color:var(--mist);margin-bottom:.3rem;">C\u1ed1t truy\u1ec7n</div><div style="font-size:.85rem;">' + p.plot.slice(0,200) + (p.plot.length>200?'...':'') + '</div></div>';
+  if (outlineLines.length) {
+    html += '<div style="margin-bottom:.8rem;"><div style="font-size:.75rem;font-weight:700;text-transform:uppercase;color:var(--mist);margin-bottom:.3rem;">D\xe0n \xfd (5 ch\u01b0\u01a1ng \u0111\u1ea7u)</div>';
+    outlineLines.forEach(l => { html += '<div style="font-size:.82rem;padding:.2rem 0;border-bottom:1px solid var(--border);">' + l + '</div>'; });
+    html += '</div>';
+  }
+  const contentKeys = Object.keys(p.content||{});
+  if (contentKeys.length) {
+    html += '<div style="margin-bottom:1rem;"><div style="font-size:.75rem;font-weight:700;text-transform:uppercase;color:var(--mist);margin-bottom:.3rem;">N\u1ed9i dung \u0111\xe3 vi\u1ebft (3 ch\u01b0\u01a1ng \u0111\u1ea7u)</div>';
+    contentKeys.slice(0,3).forEach(k => {
+      const v = p.content[k]||'';
+      html += '<div style="margin-bottom:.5rem;"><strong>' + k + ':</strong> <span style="color:var(--mist)">' + v.slice(0,120) + (v.length>120?'...':'') + '</span></div>';
+    });
+    html += '</div>';
+  } else {
+    html += '<div style="color:var(--mist);font-style:italic;margin-bottom:1rem;">Ch\u01b0a c\xf3 ch\u01b0\u01a1ng n\xe0o \u0111\u01b0\u1ee3c vi\u1ebft.</div>';
+  }
+
+  html += '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem;">';
+  html += '<button class="btn btn-primary" onclick="document.getElementById(\'proj-detail-modal\').remove();openContinueProject(\'' + p.id + '\')">\u25ba Ti\u1ebfp t\u1ee5c vi\u1ebft</button>';
+  html += '<button class="btn btn-ghost" onclick="document.getElementById(\'proj-detail-modal\').remove();loadProjectToExport(\'' + p.id + '\')">\ud83d\udcbe Xu\u1ea5t file</button>';
+  html += '<button class="btn btn-ghost" style="margin-left:auto;color:var(--rust);" onclick="document.getElementById(\'proj-detail-modal\').remove();deleteProject(\'' + p.id + '\')">\ud83d\uddd1 X\xf3a</button>';
+  html += '</div></div>';
+
+  modal.innerHTML = html;
+}
+
+
 function renderProjects() {
 const wrap = document.getElementById('project-list-wrap');
 if (!projects.length) {
@@ -6341,7 +6461,19 @@ const projCountEl = document.createElement('div');
 projCountEl.style.cssText = 'font-size:.75rem;color:var(--mist);margin-bottom:.6rem;display:flex;align-items:center;justify-content:space-between;';
 projCountEl.innerHTML = `<span>📁 ${projects.length} / ${maxP} dự án <span style="color:${projects.length >= maxP ? 'var(--rust)' : 'inherit'}">(${curPlan === 'free' ? 'miễn phí' : curPlan})</span></span> ${projects.length >= maxP && curPlan === 'free' ? '<span style="color:var(--rust);font-weight:600;">Đã đầy -- xóa dự án cũ để tạo mới</span>' : ''}`;
 wrap.appendChild(projCountEl);
-wrap.innerHTML = '<div class="project-list">' + projects.map(p => ` <div class="project-card"> <div class="proj-info"> <div class="proj-title">《${p.title}》</div> <div class="proj-meta">${p.genre}${p.subGenres && p.subGenres.length ? ' · <span style="color:var(--gold)">+' + p.subGenres.map(t=>t.replace(/^[^\s]+ /,'')).join(', ') + '</span>' : ''} · ${p.completed || 0}/${p.chapters} chương · ${p.date}</div> <div class="progress-bar-wrap" style="margin-top:.4rem;"><div class="progress-bar" style="width:${Math.round((p.completed||0)/p.chapters*100)}%"></div></div> </div> <div class="proj-actions"> <button class="btn btn-ghost" onclick="loadProjectToExport('${p.id}')">💾 Xuất</button> <button class="btn btn-ghost" onclick="deleteProject('${p.id}')">🗑</button> </div> </div>`).join('') + '</div>';
+wrap.innerHTML = '<div class="project-list">' + projects.map(p => `
+  <div class="project-card" onclick="openProjectDetail('${p.id}')" style="cursor:pointer;">
+    <div class="proj-info">
+      <div class="proj-title">《${p.title}》</div>
+      <div class="proj-meta">${p.genre}${p.subGenres && p.subGenres.length ? ' · <span style="color:var(--gold)">+' + p.subGenres.map(t=>t.replace(/^[^\s]+ /,'')).join(', ') + '</span>' : ''} · ${p.completed || 0}/${p.chapters} chương · ${p.date}</div>
+      <div class="progress-bar-wrap" style="margin-top:.4rem;"><div class="progress-bar" style="width:${Math.round((p.completed||0)/p.chapters*100)}%"></div></div>
+    </div>
+    <div class="proj-actions">
+      <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openProjectDetail('${p.id}')">📂 Mở</button>
+      <button class="btn btn-ghost" onclick="event.stopPropagation();loadProjectToExport('${p.id}')">💾 Xuất</button>
+      <button class="btn btn-ghost" onclick="event.stopPropagation();deleteProject('${p.id}')">🗑</button>
+    </div>
+  </div>`).join('') + '</div>';
 }
 
 function deleteProject(id) {
