@@ -1416,28 +1416,28 @@ min-width: 120px;
       <div class="grid2">
         <div class="form-group">
           <label>Bối cảnh thời đại</label>
-          <input id="w-era" placeholder="VD: Thế kỷ 21 đô thị hiện đại / Thời Đường triều cổ đại">
+          <textarea id="w-era" style="min-height:90px;resize:vertical;" placeholder="VD: Thế kỷ 21 đô thị hiện đại / Thời Đường triều cổ đại"></textarea>
         </div>
         <div class="form-group">
           <label>Địa điểm chính</label>
-          <input id="w-place" placeholder="VD: Kinh thành Lạc Dương / Thành phố Hà Nội năm 2045">
+          <textarea id="w-place" style="min-height:90px;resize:vertical;" placeholder="VD: Kinh thành Lạc Dương / Thành phố Hà Nội năm 2045"></textarea>
         </div>
       </div>
       <div class="form-group">
         <label>Quy tắc & Hệ thống đặc biệt</label>
-        <textarea id="w-rules" style="min-height:70px;" placeholder="VD: Hệ thống tu tiên có 9 cảnh giới / Ma pháp chia 7 nguyên tố / Công nghệ cấy ghép thần kinh..."></textarea>
+        <textarea id="w-rules" style="min-height:120px;resize:vertical;" placeholder="VD: Hệ thống tu tiên có 9 cảnh giới / Ma pháp chia 7 nguyên tố / Công nghệ cấy ghép thần kinh..."></textarea>
       </div>
       <div class="form-group">
         <label>Thế lực & Phe phái chính</label>
-        <textarea id="w-factions" style="min-height:70px;" placeholder="VD: Thiên Kiếm Tông vs Ma Đạo / Tập đoàn Orion vs Chính phủ liên bang..."></textarea>
+        <textarea id="w-factions" style="min-height:120px;resize:vertical;" placeholder="VD: Thiên Kiếm Tông vs Ma Đạo / Tập đoàn Orion vs Chính phủ liên bang..."></textarea>
       </div>
       <div class="form-group">
         <label>Không khí & Màu sắc thế giới</label>
-        <input id="w-vibe" placeholder="VD: U ám bí ẩn / Tươi sáng lạc quan / Hào nhoáng nguy hiểm / Bình yên điền viên">
+        <textarea id="w-vibe" style="min-height:70px;resize:vertical;" placeholder="VD: U ám bí ẩn / Tươi sáng lạc quan / Hào nhoáng nguy hiểm / Bình yên điền viên"></textarea>
       </div>
       <div class="form-group">
         <label>Ghi chú thêm</label>
-        <textarea id="w-extra" style="min-height:60px;" placeholder="Thông tin khác về thế giới quan..."></textarea>
+        <textarea id="w-extra" style="min-height:90px;resize:vertical;" placeholder="Thông tin khác về thế giới quan..."></textarea>
       </div>
     </div>
 
@@ -1467,26 +1467,32 @@ min-width: 120px;
         <div id="ai-result-plot-content" style="white-space:pre-wrap;font-family:'Playfair Display',serif;font-size:.88rem;line-height:1.7;"></div>
       </div>
       <div class="form-group">
+        <label style="font-size:.85rem;font-weight:700;color:var(--ink);">📜 Cốt truyện chính
+          <button id="btn-ai-plot-main" class="btn-ai-tiny" onclick="aiSuggestField('plot','main')">✨</button>
+        </label>
+        <textarea id="p-main-plot" style="min-height:140px;resize:vertical;" placeholder="Tóm tắt toàn bộ câu chuyện: nhân vật chính muốn gì, gặp trở ngại gì, hành trình ra sao, kết thúc thế nào. Đây là nền tảng để triển khai các phần còn lại..."></textarea>
+      </div>
+      <div class="form-group">
         <label>Xung đột cốt lõi *</label>
-        <textarea id="p-conflict" style="min-height:70px;" placeholder="VD: Nữ chủ bị gia tộc phản bội phải tự mình trả thù / Hai thám tử cựu thù phải hợp tác phá án tên sát nhân hàng loạt..."></textarea>
+        <textarea id="p-conflict" style="min-height:110px;resize:vertical;" placeholder="VD: Nữ chủ bị gia tộc phản bội phải tự mình trả thù / Hai thám tử cựu thù phải hợp tác phá án tên sát nhân hàng loạt..."></textarea>
       </div>
       <div class="grid2">
         <div class="form-group">
           <label>Điểm bắt đầu câu chuyện</label>
-          <textarea id="p-start" style="min-height:65px;" placeholder="Cảnh mở đầu, tình huống ban đầu của nhân vật chính..."></textarea>
+          <textarea id="p-start" style="min-height:110px;resize:vertical;" placeholder="Cảnh mở đầu, tình huống ban đầu của nhân vật chính..."></textarea>
         </div>
         <div class="form-group">
           <label>Hướng kết thúc</label>
-          <textarea id="p-end" style="min-height:65px;" placeholder="Happy ending / Bad ending / Open ending / Bi kịch / Chua ngọt..."></textarea>
+          <textarea id="p-end" style="min-height:110px;resize:vertical;" placeholder="Happy ending / Bad ending / Open ending / Bi kịch / Chua ngọt..."></textarea>
         </div>
       </div>
       <div class="form-group">
         <label>Các plot twist & cao trào chính</label>
-        <textarea id="p-twists" style="min-height:70px;" placeholder="VD: Hồi giữa: lộ ra kẻ phản diện thật sự là người thân / Hồi cuối: nhân vật chính hi sinh..."></textarea>
+        <textarea id="p-twists" style="min-height:120px;resize:vertical;" placeholder="VD: Hồi giữa: lộ ra kẻ phản diện thật sự là người thân / Hồi cuối: nhân vật chính hi sinh..."></textarea>
       </div>
       <div class="form-group">
         <label>Chủ đề & Thông điệp</label>
-        <input id="p-theme" placeholder="VD: Tình yêu vượt định kiến / Sức mạnh của lòng tin / Cái giá của tham vọng">
+        <textarea id="p-theme" style="min-height:70px;resize:vertical;" placeholder="VD: Tình yêu vượt định kiến / Sức mạnh của lòng tin / Cái giá của tham vọng"></textarea>
       </div>
     </div>
   </div>
@@ -2545,7 +2551,7 @@ window.addSecondaryChar = function() {
   if (_origAddSecChar) _origAddSecChar();
   else {
     const id = ++charIdCounter;
-    secChars.push({ id, name:'', gender:'', age:'', charType:'', personality:'', relationTo:'', relationType:'' });
+    secChars.push({ id, name:'', gender:'', age:'', charType:'', personality:'', background:'', goal:'', secret:'', plotRole:'', relationTo:'', relationType:'' });
     renderSecChars();
     triggerAutosave();
   }
@@ -2960,6 +2966,7 @@ function saveFormDraft() {
     pend:     document.getElementById('p-end')?.value || '',
     twists:   document.getElementById('p-twists')?.value || '',
     theme:    document.getElementById('p-theme')?.value || '',
+    mainPlot: document.getElementById('p-main-plot')?.value || '',
   };
   localStorage.setItem('tinix_draft', JSON.stringify(draft));
 }
@@ -3033,6 +3040,10 @@ function restoreFormDraft() {
 
     updateCharsPreview();
     buildWorldText();
+    if (d.mainPlot) {
+      const mpEl = document.getElementById('p-main-plot');
+      if (mpEl) mpEl.value = d.mainPlot;
+    }
     buildPlotText();
 
     updateProjButtons();
@@ -3216,7 +3227,7 @@ function doResetForm() {
   ['w-era','w-place','w-rules','w-factions','w-vibe','w-extra'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
-  ['p-conflict','p-start','p-end','p-twists','p-theme'].forEach(id => {
+  ['p-main-plot','p-conflict','p-start','p-end','p-twists','p-theme'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
   // Reset tone
@@ -3660,7 +3671,7 @@ const card = document.createElement('div');
 card.className = 'char-card collapsed';
 card.id = 'sec-card-' + ch.id;
 const nameLabel = ch.name || `Nhân vật phụ ${idx+1}`;
-card.innerHTML = ` <div class="char-card-header" onclick="toggleCharCard('sec-card-${ch.id}')"> <div class="char-avatar sec-avatar">👤</div> <span class="char-name-preview" id="sec-name-preview-${ch.id}">${nameLabel}</span> <span class="char-role-badge role-sec">${ch.charType||'Phụ'}</span> <button class="char-delete-btn" onclick="event.stopPropagation();deleteSecChar(${ch.id})">✕ Xóa</button> <span class="char-collapse-icon">▾</span> </div> <div class="char-card-body"> <div class="char-grid"> <div class="char-field"> <label>TÊN NHÂN VẬT * <button class="btn-ai-tiny" onclick="aiSuggestCharField(${ch.id},'name',false)">✨ AI</button></label> <input value="${ch.name}" placeholder="VD: Trần Khải" oninput="updateSecChar(${ch.id},'name',this.value)"> </div> <div class="char-field"> <label>Loại nhân vật phụ</label> <select onchange="updateSecChar(${ch.id},'charType',this.value)"> <option value="" ${!ch.charType?'selected':''}>-- Chọn --</option> <option value="Tình nhân" ${ch.charType==='Tình nhân'?'selected':''}>💕 Tình nhân / Đối tượng</option> <option value="Bạn bè" ${ch.charType==='Bạn bè'?'selected':''}>🤝 Bạn bè / Đồng hành</option> <option value="Phản diện chính" ${ch.charType==='Phản diện chính'?'selected':''}>😈 Phản diện chính</option> <option value="Phản diện phụ" ${ch.charType==='Phản diện phụ'?'selected':''}>😒 Phản diện phụ</option> <option value="Người thân" ${ch.charType==='Người thân'?'selected':''}>👨‍👩‍👧 Người thân gia đình</option> <option value="Mentor" ${ch.charType==='Mentor'?'selected':''}>🧓 Mentor / Thầy</option> <option value="Trung lập" ${ch.charType==='Trung lập'?'selected':''}>⚖️ Trung lập / Bí ẩn</option> <option value="Phụ trợ" ${ch.charType==='Phụ trợ'?'selected':''}>🛡️ Phụ trợ / Trợ lý</option> </select> </div> </div> <div class="char-grid-3" style="margin-top:.5rem;"> <div class="char-field"> <label>Giới tính</label> <select onchange="updateSecChar(${ch.id},'gender',this.value)"> <option value="">--</option> <option value="Nữ" ${ch.gender==='Nữ'?'selected':''}>👩 Nữ</option> <option value="Nam" ${ch.gender==='Nam'?'selected':''}>👨 Nam</option> </select> </div> <div class="char-field"> <label>Tuổi</label> <input value="${ch.age||''}" placeholder="VD: 28" oninput="updateSecChar(${ch.id},'age',this.value)"> </div> <div class="char-field"> <label>THÂN PHẬN <button class="btn-ai-tiny" onclick="aiSuggestCharField(${ch.id},'role',false)">✨ AI</button></label> <input value="${ch.role||''}" placeholder="VD: Cảnh sát trưởng" oninput="updateSecChar(${ch.id},'role',this.value)"> </div> </div> <div class="char-field" style="margin-top:.5rem;"> <label>TÍNH CÁCH & ĐẶC ĐIỂM <button class="btn-ai-tiny" onclick="aiSuggestCharField(${ch.id},'personality',false)">✨ AI</button></label> <input value="${ch.personality}" placeholder="VD: Nghiêm khắc, công tư phân minh, ẩn chứa nỗi đau riêng" oninput="updateSecChar(${ch.id},'personality',this.value)"> </div> <div class="char-grid" style="margin-top:.5rem;"> <div class="char-field"> <label>🔗 Quan hệ với nhân vật chính</label> <select onchange="updateSecChar(${ch.id},'relationTo',this.value)"> <option value="">-- Chọn NV chính --</option> ${mainOptions} </select> </div> <div class="char-field"> <label>Loại mối quan hệ</label> <select onchange="updateSecChar(${ch.id},'relationType',this.value)"> <option value="" ${!ch.relationType?'selected':''}>-- Chọn --</option> <option value="Người yêu / Tình nhân" ${ch.relationType==='Người yêu / Tình nhân'?'selected':''}>💕 Người yêu / Tình nhân</option> <option value="Cựu người yêu" ${ch.relationType==='Cựu người yêu'?'selected':''}>💔 Cựu người yêu</option> <option value="Bạn thân từ nhỏ" ${ch.relationType==='Bạn thân từ nhỏ'?'selected':''}>🤝 Bạn thân từ nhỏ</option> <option value="Đồng nghiệp / Đối tác" ${ch.relationType==='Đồng nghiệp / Đối tác'?'selected':''}>💼 Đồng nghiệp / Đối tác</option> <option value="Kẻ thù không đội trời chung" ${ch.relationType==='Kẻ thù không đội trời chung'?'selected':''}>⚔️ Kẻ thù</option> <option value="Thầy / Sư phụ" ${ch.relationType==='Thầy / Sư phụ'?'selected':''}>🧓 Thầy / Sư phụ</option> <option value="Anh/Chị/Em ruột" ${ch.relationType==='Anh/Chị/Em ruột'?'selected':''}>👨‍👩‍👧 Anh/Chị/Em ruột</option> <option value="Cha/Mẹ" ${ch.relationType==='Cha/Mẹ'?'selected':''}>👨‍👩‍👦 Cha/Mẹ</option> <option value="Đối thủ / Cạnh tranh" ${ch.relationType==='Đối thủ / Cạnh tranh'?'selected':''}>🏆 Đối thủ / Cạnh tranh</option> <option value="Bề trên / Cấp trên" ${ch.relationType==='Bề trên / Cấp trên'?'selected':''}>👑 Bề trên / Cấp trên</option> <option value="Bảo hộ / Che chở" ${ch.relationType==='Bảo hộ / Che chở'?'selected':''}>🛡️ Bảo hộ / Che chở</option> <option value="Bí ẩn / Chưa rõ" ${ch.relationType==='Bí ẩn / Chưa rõ'?'selected':''}>🔍 Bí ẩn / Chưa rõ</option> </select> </div> </div> <div class="char-field" style="margin-top:.5rem;"> <label>VAI TRÒ TRONG CỐT TRUYỆN <button class="btn-ai-tiny" onclick="aiSuggestCharField(${ch.id},'plotRole',false)">✨ AI</button></label> <input value="${ch.plotRole||''}" placeholder="VD: Kẻ giật dây đứng sau vụ án / Người duy nhất biết bí mật của nữ chủ" oninput="updateSecChar(${ch.id},'plotRole',this.value)"> </div> </div>`;
+card.innerHTML = ` <div class="char-card-header" onclick="toggleCharCard('sec-card-${ch.id}')"> <div class="char-avatar sec-avatar">👤</div> <span class="char-name-preview" id="sec-name-preview-${ch.id}">${nameLabel}</span> <span class="char-role-badge role-sec">${ch.charType||'Phụ'}</span> <button class="char-delete-btn" onclick="event.stopPropagation();deleteSecChar(${ch.id})">✕ Xóa</button> <span class="char-collapse-icon">▾</span> </div> <div class="char-card-body"> <div class="char-grid"> <div class="char-field"> <label>TÊN NHÂN VẬT * <button class="btn-ai-tiny" onclick="aiSuggestCharField(${ch.id},'name',false)">✨ AI</button></label> <input value="${ch.name}" placeholder="VD: Trần Khải" oninput="updateSecChar(${ch.id},'name',this.value)"> </div> <div class="char-field"> <label>Loại nhân vật phụ</label> <select onchange="updateSecChar(${ch.id},'charType',this.value)"> <option value="" ${!ch.charType?'selected':''}>-- Chọn --</option> <option value="Tình nhân" ${ch.charType==='Tình nhân'?'selected':''}>💕 Tình nhân / Đối tượng</option> <option value="Bạn bè" ${ch.charType==='Bạn bè'?'selected':''}>🤝 Bạn bè / Đồng hành</option> <option value="Phản diện chính" ${ch.charType==='Phản diện chính'?'selected':''}>😈 Phản diện chính</option> <option value="Phản diện phụ" ${ch.charType==='Phản diện phụ'?'selected':''}>😒 Phản diện phụ</option> <option value="Người thân" ${ch.charType==='Người thân'?'selected':''}>👨‍👩‍👧 Người thân gia đình</option> <option value="Mentor" ${ch.charType==='Mentor'?'selected':''}>🧓 Mentor / Thầy</option> <option value="Trung lập" ${ch.charType==='Trung lập'?'selected':''}>⚖️ Trung lập / Bí ẩn</option> <option value="Phụ trợ" ${ch.charType==='Phụ trợ'?'selected':''}>🛡️ Phụ trợ / Trợ lý</option> </select> </div> </div> <div class="char-grid-3" style="margin-top:.5rem;"> <div class="char-field"> <label>Giới tính</label> <select onchange="updateSecChar(${ch.id},'gender',this.value)"> <option value="">--</option> <option value="Nữ" ${ch.gender==='Nữ'?'selected':''}>👩 Nữ</option> <option value="Nam" ${ch.gender==='Nam'?'selected':''}>👨 Nam</option> </select> </div> <div class="char-field"> <label>Tuổi</label> <input value="${ch.age||''}" placeholder="VD: 28" oninput="updateSecChar(${ch.id},'age',this.value)"> </div> <div class="char-field"> <label>THÂN PHẬN <button class="btn-ai-tiny" onclick="aiSuggestCharField(${ch.id},'role',false)">✨ AI</button></label> <input value="${ch.role||''}" placeholder="VD: Cảnh sát trưởng" oninput="updateSecChar(${ch.id},'role',this.value)"> </div> </div> <div class="char-field" style="margin-top:.5rem;"> <label>TÍNH CÁCH & ĐẶC ĐIỂM <button class="btn-ai-tiny" onclick="aiSuggestCharField(${ch.id},'personality',false)">✨ AI</button></label> <input value="${ch.personality}" placeholder="VD: Nghiêm khắc, công tư phân minh, ẩn chứa nỗi đau riêng" oninput="updateSecChar(${ch.id},'personality',this.value)"> </div> <div class="char-field" style="margin-top:.5rem;"> <label>Thân thế & Quá khứ <button id="btn-char-${ch.id}-background-sec" class="btn-ai-tiny" onclick="aiSuggestCharField(${ch.id},'background',false)">✨</button></label> <textarea placeholder="Xuất thân, biến cố quan trọng..." oninput="updateSecChar(${ch.id},'background',this.value)">${ch.background||''}</textarea> </div> <div class="char-grid" style="margin-top:.5rem;"> <div class="char-field"> <label>Mục tiêu / Động lực <button id="btn-char-${ch.id}-goal-sec" class="btn-ai-tiny" onclick="aiSuggestCharField(${ch.id},'goal',false)">✨</button></label> <textarea placeholder="Muốn gì, sợ gì..." oninput="updateSecChar(${ch.id},'goal',this.value)">${ch.goal||''}</textarea> </div> <div class="char-field"> <label>Bí mật / Điểm yếu <button id="btn-char-${ch.id}-secret-sec" class="btn-ai-tiny" onclick="aiSuggestCharField(${ch.id},'secret',false)">✨</button></label> <textarea placeholder="Bí mật, điểm yếu chí mạng..." oninput="updateSecChar(${ch.id},'secret',this.value)">${ch.secret||''}</textarea> </div> </div> <div class="char-grid" style="margin-top:.5rem;"> <div class="char-field"> <label>🔗 Quan hệ với nhân vật chính</label> <select onchange="updateSecChar(${ch.id},'relationTo',this.value)"> <option value="">-- Chọn NV chính --</option> ${mainOptions} </select> </div> <div class="char-field"> <label>Loại mối quan hệ</label> <select onchange="updateSecChar(${ch.id},'relationType',this.value)"> <option value="" ${!ch.relationType?'selected':''}>-- Chọn --</option> <option value="Người yêu / Tình nhân" ${ch.relationType==='Người yêu / Tình nhân'?'selected':''}>💕 Người yêu / Tình nhân</option> <option value="Cựu người yêu" ${ch.relationType==='Cựu người yêu'?'selected':''}>💔 Cựu người yêu</option> <option value="Bạn thân từ nhỏ" ${ch.relationType==='Bạn thân từ nhỏ'?'selected':''}>🤝 Bạn thân từ nhỏ</option> <option value="Đồng nghiệp / Đối tác" ${ch.relationType==='Đồng nghiệp / Đối tác'?'selected':''}>💼 Đồng nghiệp / Đối tác</option> <option value="Kẻ thù không đội trời chung" ${ch.relationType==='Kẻ thù không đội trời chung'?'selected':''}>⚔️ Kẻ thù</option> <option value="Thầy / Sư phụ" ${ch.relationType==='Thầy / Sư phụ'?'selected':''}>🧓 Thầy / Sư phụ</option> <option value="Anh/Chị/Em ruột" ${ch.relationType==='Anh/Chị/Em ruột'?'selected':''}>👨‍👩‍👧 Anh/Chị/Em ruột</option> <option value="Cha/Mẹ" ${ch.relationType==='Cha/Mẹ'?'selected':''}>👨‍👩‍👦 Cha/Mẹ</option> <option value="Đối thủ / Cạnh tranh" ${ch.relationType==='Đối thủ / Cạnh tranh'?'selected':''}>🏆 Đối thủ / Cạnh tranh</option> <option value="Bề trên / Cấp trên" ${ch.relationType==='Bề trên / Cấp trên'?'selected':''}>👑 Bề trên / Cấp trên</option> <option value="Bảo hộ / Che chở" ${ch.relationType==='Bảo hộ / Che chở'?'selected':''}>🛡️ Bảo hộ / Che chở</option> <option value="Bí ẩn / Chưa rõ" ${ch.relationType==='Bí ẩn / Chưa rõ'?'selected':''}>🔍 Bí ẩn / Chưa rõ</option> </select> </div> </div> <div class="char-field" style="margin-top:.5rem;"> <label>VAI TRÒ TRONG CỐT TRUYỆN <button class="btn-ai-tiny" onclick="aiSuggestCharField(${ch.id},'plotRole',false)">✨ AI</button></label> <input value="${ch.plotRole||''}" placeholder="VD: Kẻ giật dây đứng sau vụ án / Người duy nhất biết bí mật của nữ chủ" oninput="updateSecChar(${ch.id},'plotRole',this.value)"> </div> </div>`;
 list.appendChild(card);
 });
 updateCharsPreview();
@@ -3761,7 +3772,9 @@ const end = document.getElementById('p-end').value.trim();
 const twists = document.getElementById('p-twists').value.trim();
 const theme = document.getElementById('p-theme').value.trim();
 const parts = [];
-if (conflict) parts.push(`Xung đột cốt lõi: ${conflict}`);
+const mainPlot = document.getElementById('p-main-plot')?.value.trim() || '';
+  if (mainPlot)  parts.push(`Cốt truyện chính: ${mainPlot}`);
+  if (conflict) parts.push(`Xung đột cốt lõi: ${conflict}`);
 if (start) parts.push(`Điểm bắt đầu: ${start}`);
 if (end) parts.push(`Hướng kết thúc: ${end}`);
 if (twists) parts.push(`Plot twist/Cao trào: ${twists}`);
@@ -4019,6 +4032,7 @@ function getFullContext() {
   const vibe     = document.getElementById('w-vibe')?.value.trim() || '';
 
   // Plot fields
+  const mainPlot = document.getElementById('p-main-plot')?.value.trim() || '';
   const conflict = document.getElementById('p-conflict')?.value.trim() || '';
   const start    = document.getElementById('p-start')?.value.trim() || '';
   const end      = document.getElementById('p-end')?.value.trim() || '';
@@ -4040,6 +4054,7 @@ function buildContextSummary(ctx) {
   if (ctx.rules)     parts.push('Hệ thống: ' + ctx.rules.slice(0, 200));
   if (ctx.factions)  parts.push('Phe phái: ' + ctx.factions.slice(0, 150));
   if (ctx.vibe)      parts.push('Vibe: ' + ctx.vibe);
+  if (ctx.mainPlot)  parts.push('Cốt truyện chính: ' + ctx.mainPlot.slice(0, 300));
   if (ctx.conflict)  parts.push('Xung đột: ' + ctx.conflict.slice(0, 200));
   if (ctx.start)     parts.push('Mở đầu: ' + ctx.start.slice(0, 150));
   if (ctx.end)       parts.push('Kết thúc: ' + ctx.end.slice(0, 100));
@@ -4207,6 +4222,7 @@ async function aiSuggestField(tab, field) {
     start:    { label:'Điểm bắt đầu', cur:ctx.start,   id:'p-start',    tok:100, task:'Cảnh mở đầu ấn tượng. Viết 1-2 câu liền mạch.' },
     end:      { label:'Hướng kết thúc', cur:ctx.end,     id:'p-end',      tok:80,  task:'Hướng kết (happy/bad/open...) và lý do. 1 câu ngắn.' },
     twist:    { label:'Plot twist & Cao trào', cur:ctx.twists,  id:'p-twists',   tok:350, task:'Viết một đoạn liền mạch về 1-2 plot twist bất ngờ nhưng hợp lý, nêm ở điểm nào, tác động ra sao. Không xuống dòng, không tiêu đề.' },
+    main:     { label:'Cốt truyện chính', cur:ctx.mainPlot, id:'p-main-plot', tok:350, task:'Viết 1 đoạn tóm tắt toàn bộ câu chuyện: nhân vật muốn gì, gặp trở ngại gì, hành trình và kết thúc. Liền mạch, không xuống dòng.' },
     theme:    { label:'Chủ đề & Thông điệp', cur:ctx.theme,   id:'p-theme',    tok:60,  task:'Thông điệp cốt lõi. 1 câu thật ngắn.' },
   };
   const f = cfg[field];
@@ -5157,7 +5173,9 @@ const prompt = 'Tạo dàn ý ' + chapters + ' chương cho tiểu thuyết ' + 
   (regNames ? '\n⚠️ Chỉ dùng NV: ' + regNames : '') +
   '\n\nXuất đúng ' + chapters + ' dòng, mỗi dòng:\n' +
   'Chương N: [Tên] - [Mô tả 30-50 từ, có xung đột/bước ngoặt]\n\n' +
-  'Cấu trúc: 25% mở đầu, 50% cao trào, 25% kết thúc. CHỆ xuất dàn ý, không giải thích.';
+  '\nBắt buộc xuất đúng ' + chapters + ' dòng (Chương 1 đến Chương ' + chapters + ').\n' +
+  'Cấu trúc: 25% mở đầu, 50% cao trào, 25% kết thúc.\n' +
+  'CHỈ xuất ' + chapters + ' dòng dàn ý, tuyệt đối không bỏ sót chương nào.';
 
 const btn = document.getElementById('btn-gen-outline');
 btn.disabled = true;
