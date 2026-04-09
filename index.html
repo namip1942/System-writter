@@ -1512,7 +1512,7 @@ min-width: 120px;
         <div class="vu-icon">📂</div>
         <div class="vu-text">Nhấn để thêm file tham khảo</div>
         <div class="vu-sub">.txt · .md -- tối đa 5 file, mỗi file 500KB. AI lấy 2.000 từ đầu mỗi file.</div>
-        <input type="file" id="voice-file-input" accept=".txt,.md" multiple style="display:none" onchange="onVoiceFilesSelect(event)">
+        <input type="file" id="voice-file-input" accept=".txt,.md,.docx,.pdf" multiple style="display:none" onchange="onVoiceFilesSelect(event)">
       </div>
 
       <!-- File list -->
@@ -4721,6 +4721,16 @@ renderVoiceStatus();
 }
 }
 
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
 function onVoiceFilesSelect(event) {
 const files = Array.from(event.target.files);
 if (!files.length) return;
@@ -4729,29 +4739,80 @@ toast('\u26a0\ufe0f T\u1ed1i \u0111a 5 file!'); return;
 }
 let loaded = 0;
 files.forEach(file => {
-if (file.size > 512 * 1024) {
-toast('\u26a0\ufe0f File "' + file.name + '" qu\xe1 l\u1edbn (t\u1ed1i \u0111a 512KB)');
+const maxSize = file.name.match(/\.(pdf|docx)$/i) ? 5*1024*1024 : 512*1024;
+const maxLabel = file.name.match(/\.(pdf|docx)$/i) ? '5MB' : '512KB';
+if (file.size > maxSize) {
+toast('\u26a0\ufe0f File "' + file.name + '" qu\xe1 l\u1edbn (t\u1ed1i \u0111a ' + maxLabel + ')');
 return;
 }
 if (voiceFiles.find(f => f.name === file.name)) {
 toast('\u26a0\ufe0f File "' + file.name + '" \u0111\xe3 \u0111\u01b0\u1ee3c th\xeam r\u1ed3i');
 return;
 }
-const reader = new FileReader();
-reader.onload = e => {
-let text = e.target.result || '';
-const allWords = text.split(/\s+/).filter(Boolean);
-const words = Math.min(allWords.length, 2000);
-const trimmedText = allWords.slice(0, 2000).join(' ');
-voiceFiles.push({ name: file.name, words, text: trimmedText });
-loaded++;
-renderVoiceFileList();
-if (loaded === files.length) {
-toast('\u2705 \u0110\xe3 th\xeam ' + loaded + ' file \u2014 nh\u1ea5n \ud83d\udd0d Ph\xe2n t\xedch \u0111\u1ec3 ti\u1ebfp t\u1ee5c');
+const ext = file.name.split('.').pop().toLowerCase();
+if (ext === 'docx') {
+  // Use mammoth.js to extract text from .docx
+  const arrReader = new FileReader();
+  arrReader.onload = async (e) => {
+    try {
+      if (typeof mammoth === 'undefined') {
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
+      }
+      const result = await mammoth.extractRawText({ arrayBuffer: e.target.result });
+      const text = result.value || '';
+      const allWords = text.split(/\s+/).filter(Boolean);
+      const words = Math.min(allWords.length, 2000);
+      voiceFiles.push({ name: file.name, words, text: allWords.slice(0, 2000).join(' ') });
+      loaded++;
+      renderVoiceFileList();
+      if (loaded === files.length) toast('\u2705 \u0110\xe3 th\xeam ' + loaded + ' file \u2014 nh\u1ea5n \ud83d\udd0d Ph\xe2n t\xedch');
+    } catch(err) {
+      toast('\u274c Kh\xf4ng \u0111\u1ecdc \u0111\u01b0\u1ee3c file docx: ' + err.message);
+    }
+  };
+  arrReader.readAsArrayBuffer(file);
+} else if (ext === 'pdf') {
+  // Use PDF.js to extract text from .pdf
+  const arrReader2 = new FileReader();
+  arrReader2.onload = async (e) => {
+    try {
+      if (typeof pdfjsLib === 'undefined') {
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      }
+      const pdf = await pdfjsLib.getDocument({ data: e.target.result }).promise;
+      let fullText = '';
+      for (let p = 1; p <= Math.min(pdf.numPages, 30); p++) {
+        const page = await pdf.getPage(p);
+        const tc = await page.getTextContent();
+        fullText += tc.items.map(i => i.str).join(' ') + '\n';
+      }
+      const allWords = fullText.split(/\s+/).filter(Boolean);
+      const words = Math.min(allWords.length, 2000);
+      voiceFiles.push({ name: file.name, words, text: allWords.slice(0, 2000).join(' ') });
+      loaded++;
+      renderVoiceFileList();
+      if (loaded === files.length) toast('\u2705 \u0110\xe3 th\xeam ' + loaded + ' file \u2014 nh\u1ea5n \ud83d\udd0d Ph\xe2n t\xedch');
+    } catch(err) {
+      toast('\u274c Kh\xf4ng \u0111\u1ecdc \u0111\u01b0\u1ee3c file pdf: ' + err.message);
+    }
+  };
+  arrReader2.readAsArrayBuffer(file);
+} else {
+  // txt/md: plain text
+  const reader = new FileReader();
+  reader.onload = e => {
+    let text = e.target.result || '';
+    const allWords = text.split(/\s+/).filter(Boolean);
+    const words = Math.min(allWords.length, 2000);
+    voiceFiles.push({ name: file.name, words, text: allWords.slice(0, 2000).join(' ') });
+    loaded++;
+    renderVoiceFileList();
+    if (loaded === files.length) toast('\u2705 \u0110\xe3 th\xeam ' + loaded + ' file \u2014 nh\u1ea5n \ud83d\udd0d Ph\xe2n t\xedch');
+  };
+  reader.onerror = () => toast('\u274c Kh\xf4ng \u0111\u1ecdc \u0111\u01b0\u1ee3c "' + file.name + '"');
+  reader.readAsText(file, 'utf-8');
 }
-};
-reader.onerror = () => toast('\u274c Kh\xf4ng \u0111\u1ecdc \u0111\u01b0\u1ee3c "' + file.name + '"');
-reader.readAsText(file, 'utf-8');
 });
 // reset input to allow re-selecting same file
 event.target.value = '';
@@ -5553,7 +5614,7 @@ ${hasRegisteredChars ? `⚠️ QUAN TRỌNG VỀ NHÂN VẬT:
 - TUYỆT ĐỐI KHÔNG tự thêm nhân vật mới ngoài danh sách này
 - Nếu dàn ý đề cập nhân vật không có tên, hãy dùng nhân vật phụ/phản diện đã khai báo` : ''}
 
-${voiceNote ? '\n═══ GIỌNG VĂN CẦN BẮT CHƯỜC ═══\nÁp dụng CHÍNH XÁC phong cách viết sau:\n' + voiceNote + '\n' : ''}
+${voiceNote ? '\n[PHONG CÁCH VIẾT THAM KHẢO - CHỈ HỌC CÁCH VIẾT, KHÔNG COPY NỘI DUNG]\n' + voiceNote.slice(0,250) + '\n[Học có chủ đích: nhịp câu, từ ngữ, giọng kể — TUYỆT ĐỐI không dùng nội dung mẫu]\n' : ''}
 ═══ DÀN Ý TOÀN BỘ (để hiểu mạch truyện) ═══
 ${fullOutline}
 
@@ -5572,7 +5633,7 @@ ${writtenSummary ? '\n═══ TÓM TẮT CÁC CHƯƠNG ĐÃ VIẾT ═══\n
 - Kết thúc chương hoàn chỉnh -- KHÔNG để câu/cảnh bị cắt giữa chừng
 - Kết thúc tạo cảm giác muốn đọc tiếp chương sau
 - 100% tiếng Việt tự nhiên, văn phong sống động${subGenreText ? '\n- Kết hợp yếu tố: ' + subGenreText : ''}
-- Không bắt đầu bằng "Tuy nhiên", "Hơn nữa", "Bên cạnh đó"${voiceNote ? '\n═══ GIỌNG VĂN CẦN BẮT CHƯỚC ═══\nÁp dụng CHÍNH XÁC phong cách viết sau:\n' + voiceNote + '\n' : ''}
+- Không bắt đầu bằng "Tuy nhiên", "Hơn nữa", "Bên cạnh đó"${voiceNote ? '\n[PHONG CÁCH VIẾT THAM KHẢO - CHỈ HỌC CÁCH VIẾT, KHÔNG COPY NỘI DUNG]\n' + voiceNote.slice(0,250) + '\n[Học có chủ đích: nhịp câu, từ ngữ, giọng kể — TUYỆT ĐỐI không dùng nội dung mẫu]\n' : ''}
   CHỈ xuất nội dung chương, không tiêu đề, không ghi chú.`;
   
   showChWriteState();
@@ -6178,6 +6239,12 @@ const prompt = 'Nhà văn chuyên ' + genre + '. Viết Chương ' + ch.num + '/
 (world ? 'Thế giới: ' + world.slice(0,120) + '\n' : '') +
 (plot  ? 'Cốt truyện: ' + plot.slice(0,120) + '\n' : '') +
 contextNote + '\n\n' +
+(voiceProfile || voiceFiles.length ? (
+  '\n\n[PHONG C\u00c1CH VI\u1ebcT THAM KH\u1ea2O - CH\u1ec6 H\u1eccC C\u00c1CH VI\u1ebcT, KH\u00d4NG COPY N\u1ed8I DUNG]\n' +
+  (voiceProfile ? voiceProfile.slice(0,250) + '\n' : '') +
+  (voiceFiles.length ? 'V\xed d\u1ee5 c\xe2u v\u0103n (ch\u1ec9 h\u1ecdc gi\u1ecdng, kh\xf4ng copy):\n"""' + voiceFiles[0].text.slice(0,150) + '"""\n' : '') +
+  '[H\u1eect c\xf3 ch\u1ee7 \u0111\xedch: nh\u1ecbp c\xe2u, c\xe1ch d\xf9ng t\u1eeb, gi\u1ecdng k\u1ec3 \u2014 TUY\u1ec6T \u0110\u1ed0I kh\xf4ng d\xf9ng n\u1ed9i dung m\u1eabu]\n'
+) : '') +
 'Yêu cầu: ~' + targetWords + ' từ, bám sát kế hoạch, nhất quán với các chương trước, 100% tiếng Việt.\nCHỈ xuất nội dung chương.';
 
 const writeBtn = document.querySelector('#cont-ch-actions .btn-primary');
