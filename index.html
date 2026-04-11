@@ -12,7 +12,7 @@
 // ── SUPABASE CONFIG ──────────────────────────────────────────────────────────
 const SUPABASE_URL = 'https://mgjgtzvgwwsxhiioevox.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_MJuEYQzxv5eXYeGF0lWUiA_vrK3yPVW';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let sb = null;
 let currentUser = null;
 </script>
 
@@ -2151,6 +2151,15 @@ function googleBtnHTML() {
   return '<svg viewBox="0 0 24 24" style="width:20px;height:20px;flex-shrink:0"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Đăng nhập với Google';
 }
 
+
+function togglePwd(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const show = el.type === 'password';
+  el.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁';
+}
+
 async function signInEmail() {
   const email = document.getElementById('auth-email').value.trim();
   const pass  = document.getElementById('auth-password').value;
@@ -2158,12 +2167,22 @@ async function signInEmail() {
   const btn = document.getElementById('btn-auth-submit');
   btn.disabled = true; btn.textContent = 'Đang đăng nhập...';
   setAuthError('auth-error', '');
-  const { data: _d, error } = await sb.auth.signInWithPassword({ email, password: pass });
-  if (error) {
-    const msg = error.message.includes('Invalid') ? 'Email hoặc mật khẩu không đúng' : error.message;
-    setAuthError('auth-error', msg);
-    btn.disabled = false; btn.textContent = 'Đăng nhập';
-  } else if (_d?.user) { await onSignedIn(_d.user); }
+  try {
+    if (!sb) throw new Error('Khởi tạo Supabase chưa xong, thử lại sau 1 giây');
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) {
+      const msg = (error.message.includes('Invalid') || error.message.includes('credentials'))
+        ? 'Email hoặc mật khẩu không đúng'
+        : error.message;
+      setAuthError('auth-error', msg);
+    } else if (data?.user) {
+      await onSignedIn(data.user);
+      return;
+    }
+  } catch(e) {
+    setAuthError('auth-error', e.message || 'Lỗi kết nối. Kiểm tra mạng và thử lại.');
+  }
+  btn.disabled = false; btn.textContent = 'Đăng nhập';
 }
 
 async function signUpEmail() {
@@ -2175,11 +2194,37 @@ async function signUpEmail() {
   if (!email) { setAuthError('auth-signup-error', 'Vui lòng nhập email'); return; }
   if (pass.length < 6) { setAuthError('auth-signup-error', 'Mật khẩu ít nhất 6 ký tự'); return; }
   if (pass !== pass2) { setAuthError('auth-signup-error', 'Mật khẩu nhập lại không khớp'); return; }
-  const { error } = await sb.auth.signUp({ email, password: pass });
-  if (error) { setAuthError('auth-signup-error', error.message); return; }
-  const s = document.getElementById('auth-signup-success');
-  s.textContent = '✅ Đăng ký thành công! Kiểm tra email để xác nhận (hoặc đăng nhập thẳng nếu không cần xác nhận).';
-  s.classList.add('show');
+  
+  const btn = document.querySelector('#auth-signup-form .btn-auth-primary');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang tạo tài khoản...'; }
+  
+  try {
+    if (!sb) throw new Error('Khởi tạo Supabase chưa xong, thử lại sau 1 giây');
+    const { data, error } = await sb.auth.signUp({ 
+      email, 
+      password: pass,
+      options: { emailRedirectTo: window.location.href }
+    });
+    if (error) { setAuthError('auth-signup-error', error.message); return; }
+    
+    // If user created and confirmed immediately (email confirmation disabled)
+    if (data?.user && !data.user.email_confirmed_at && data.session) {
+      await onSignedIn(data.user);
+      return;
+    }
+    if (data?.user && data.session) {
+      await onSignedIn(data.user);
+      return;
+    }
+    
+    const s = document.getElementById('auth-signup-success');
+    s.textContent = '✅ Đăng ký thành công! Kiểm tra email để xác nhận (hoặc đăng nhập thẳng nếu không cần xác nhận).';
+    s.classList.add('show');
+  } catch(e) {
+    setAuthError('auth-signup-error', e.message || 'Lỗi kết nối. Kiểm tra mạng và thử lại.');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Tạo tài khoản'; }
+  }
 }
 
 async function forgotPassword() {
@@ -2398,6 +2443,21 @@ const _origSaveSettings = window.saveSettings;
 
 // ── INIT AUTH ────────────────────────────────
 async function initSupabaseAuth() {
+  // Init sb client if not yet (SDK must be loaded by now via DOMContentLoaded)
+  if (!sb) {
+    if (typeof supabase === 'undefined') {
+      console.error('Supabase SDK chưa load!');
+      setAuthError('auth-error', 'Lỗi tải thư viện. Vui lòng tải lại trang.');
+      return;
+    }
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      }
+    });
+  }
   // Check current session
   const { data: { session } } = await sb.auth.getSession();
   if (session?.user) {
@@ -3438,6 +3498,22 @@ const STYLE_GROUPS = [
     { id:'literary',   label:'📚 Văn học nghệ thuật', desc:'Thi vị, ẩn dụ tinh tế, chạm đến tầng sâu cảm xúc.' },
     { id:'adventure',  label:'🔥 Phiêu lưu hào hùng', desc:'Nhiệt huyết, hữu nghị, chiến đấu không ngừng.' },
   ]},
+  { group: '── Phong cách nâng cao (từ writing_styles.json) ──', items: [
+    { id:'smooth',     label:'✨ Mượt mà tự nhiên',    desc:'Văn phong trơn tru, mạch truyện logic, tâm lý nhân vật sâu sắc nhất quán.' },
+    { id:'poetic',     label:'🌸 Văn phong đẹp, ý cảnh sâu', desc:'Từ ngữ trau chuốt, giàu hình ảnh, không gian nghệ thuật đầy cảm xúc.' },
+    { id:'fastpaced',  label:'⚡ Nhịp nhanh, kịch tính', desc:'Tập trung hành động, xung đột, cắt giảm miêu tả thừa, bất ngờ liên tục.' },
+    { id:'emotional',  label:'💫 Mô tả tinh tế, cảm xúc phong phú', desc:'Cảm xúc rung động tinh vi, chi tiết bối cảnh tô đậm không khí truyện.' },
+    { id:'humoreasy',  label:'😄 Hài hước nhẹ nhàng, vui vẻ', desc:'Ngôn ngữ hóm hỉnh, tình huống dở khóc dở cười, mang tính giải trí cao.' },
+    { id:'mixmodern',  label:'🔀 Hỗn hợp hiện đại cổ phong', desc:'Pha từ hiện đại (level up, cheat, vibe) với khung cổ, Gen Z lồng cổ phong.' },
+    { id:'thriller2',  label:'🔪 Hồi hộp giật gân', desc:'Câu ngắn, không khí u ám, tâm lý rùng rợn, điểm mù và plot twist liên tục.' },
+    { id:'slap',       label:'👊 Trang bức vả mặt', desc:'Kết cấu bị khinh → thể hiện → khiếp sợ. Phóng đại cảm xúc đám đông, chênh lệch đẳng cấp.' },
+    { id:'multpov',    label:'🎭 Quần tượng nhiều POV', desc:'Đan xen nhiều góc nhìn, thay đổi giọng văn theo nhân vật, bối cảnh sử thi.' },
+    { id:'military',   label:'⚔️ Quân sự chiến tranh', desc:'Thuật ngữ quân sự, chiến thuật, trầm hùng, khốc liệt chiến trường, tinh thần đồng đội.' },
+    { id:'esports',    label:'🎮 Võng du eSports', desc:'Ngôn ngữ game thủ (combat, gank, loot), tốc độ trận đấu nhanh, tâm sinh lý thi đấu.' },
+    { id:'philos',     label:'🧘 Triết lý nội tâm', desc:'Độc thoại dài về đạo tâm, nhân quả, nhân sinh, văn trầm lắng suy tư sâu.' },
+    { id:'reverse',    label:'💔 Ngược luyến tàn tâm', desc:'Bi kịch dồn dập, hiểu lầm, xoáy vào nỗi đau thể xác lẫn tinh thần, đường cùng.' },
+    { id:'ensemble',   label:'🌟 Đam mỹ/Bách hợp tinh tế', desc:'Tình cảm đồng giới phát triển tự nhiên, thấu hiểu nội tâm, rung động nhỏ nhất.' },
+  ]},
 ];
 const STYLES = STYLE_GROUPS.flatMap(g => g.items);
 
@@ -3482,6 +3558,20 @@ const STYLE_PROMPTS = {
   humor:       'Viết lại theo phong cách Hài hước: dùng irony, phóng đại hài hước, tình huống dở khóc dở cười khiến người đọc bật cười thành tiếng.',
   literary:    'Viết lại theo phong cách Văn học nghệ thuật: ngôn ngữ thi vị, ẩn dụ tinh tế, mỗi câu văn là một bức tranh chạm đến tầng sâu cảm xúc.',
   adventure:   'Viết lại theo phong cách Phiêu lưu hào hùng: nhịp văn nhanh và nhiệt huyết, tình bạn và chiến đấu được tô đậm, mỗi chương là một cuộc phiêu lưu mới.',
+  smooth:      'Viết lại theo phong cách Mượt mà tự nhiên: văn phống trơn tru, dễ đọc, mạch truyện logic xuyên suốt không có sạn. Xây dựng tâm lý và hành động nhân vật sâu sắc, nhất quán.',
+  poetic:      'Viết lại theo phong cách Văn phồng đẹp, ý cảnh sâu xa: sử dụng từ ngữ trau chuốt, giàu hình ảnh và phép tu từ. Tập trung miêu tả cảnh vật, nội tâm nhân vật để tạo không gian nghệ thuật đầy cảm xúc.',
+  fastpaced:   'Viết lại theo phong cách Nhịp nhanh, kịch tính: tập trung vào hành động, xung đột. Cắt giảm tối đa miêu tả thừa, đưa người đọc đi từ bất ngờ này đến bất ngờ khác.',
+  emotional:   'Viết lại theo phong cách Mô tả tinh tế, cảm xúc phong phú: chú trậng cảm xúc, rung động tinh vi của nhân vật. Các chi tiết nhỏ trong bối cảnh và tương tác được dùng để tô đẮm không khí truyện.',
+  humoreasy:   'Viết lại theo phong cách Hài hước nhẹ nhàng: sử dụng ngôn ngữ hóm hỉnh, tình huống dở khóc dở cười, mang tính giải trí cao.',
+  mixmodern:   'Viết lại theo phong cách Hỗn hợp hiện đại cổ phong: pha từ hiện đại (level up, cheat, vibe), đối thoại hơi Gen Z nhưng giữ khung cổ phong.',
+  thriller2:   'Viết lại theo phong cách Hồi hộp giật gân: câu văn ngắn gọn, không khí u ám, tâm lý rùng rợn, dẫn dắt điểm mù và plot twist liên tục, tốc độ dồn dập.',
+  slap:        'Viết lại theo phong cách Trang bức vả mặt: kết cấu "bị khinh bỉ → thể hiện tài năng → mọi người khiếp sợ". Ngôn từ phóng đại cảm xúc đám đông, nhấn mạnh sự chênh lệch đẳng cấp.',
+  multpov:     'Viết lại theo phong cách Quần tượng nhiều POV: không tập trung một cá nhân, đan xen nhiều góc nhìn, thay đổi giọng văn theo nhân vật. Bối cảnh rộng lớn, sử thi.',
+  military:    'Viết lại theo phong cách Quân sự chiến tranh: thuật ngữ quân sự, vũ khí học, chiến lược chiến thuật. Văn phông trầm hùng, khốc liệt chiến trường, tinh thần đồng đội nồng đậm.',
+  esports:     'Viết lại theo phong cách Võng du eSports: ngôn ngữ game thủ (combat, gank, AP, AD, loot đồ). Tốc độ trận đấu nhanh, mô phỏng thao tác bàn phím, tâm sinh lý thi đấu đỉnh cao.',
+  philos:      'Viết lại theo phong cách Triết lý nội tâm: đoạn độc thoại dài về đạo tâm, nhân quả, nhân sinh. Văn trầm lắng suy tư sâu sắc.',
+  reverse:     'Viết lại theo phong cách Ngược luyến tàn tâm: cốt truyện đầy hiểu lầm, bi kịch dồn dập. Xóay sâu vào nỗi đau, sự tuyệt vậng, giàng xé nội tâm, đẩy nhân vật vào đường cùng.',
+  ensemble:    'Viết lại theo phong cách Đam mỹ/Bách hợp tinh tế: tình cảm đồng giới phát triển tự nhiên, thấu hiểu nội tâm, những rung động nhỏ nhất được khắc họa tinh tế.',
 };
 
 const POLISH_PROMPTS = {
@@ -4471,6 +4561,28 @@ else if (lower.includes('nhịp') || lower.includes('pacing')) { chipSel('pacing
 }
 }
 
+
+// ── Genre descriptions from genres.json ─────────────────────────────────────
+const GENRE_DESCRIPTIONS = {
+  'Huyền huyễn tiên hiệp': 'Thế giới tu tiên, thăng cấp cảnh giới, cơ duyên, pháp bảo, linh thú. Văn phong kỳ ảo.',
+  'Mạt thế': 'Bối cảnh tận thế, sinh tồn, dị năng, xây dựng thế lực.',
+  'Kỳ ảo phương Tây': 'Hiệp sĩ, phép thuật, elf, rồng, ma cà rồng. Hệ thống ma pháp phương Tây.',
+  'Tổng tài': 'Nam chính tổng tài giàu có lạnh lùng, nữ chính xuất thân thấp, sủng ngọt hoặc ngược.',
+  'Thanh xuân vườn trường': 'Trường học, tình đầu trong sáng, tình bạn, áp lực thi cử, tuổi trẻ rực rỡ.',
+  'Gia đấu': 'Gia tộc lớn phong kiến, đấu tranh mẹ chồng nàng dâu, các phòng, vị thế gia đình.',
+  'Hồng hoang': 'Thần thoại Trung Hoa cổ đại, Bàn Cổ khai thiên, sức mạnh thần thánh vũ trụ.',
+  'Ngôn tình võng du': 'Game online + tình cảm đời thực, song song ảo và thật, PK, đấu giải bang phái.',
+  'Linh dị - Bí ẩn': 'Tà ma, phong thủy, đạo sĩ trừ tà, tâm linh, huyền bí không lý giải được.',
+  'Thám hiểm lăng mộ': 'Trộm mộ, bảo vật cổ, cạm bẫy, cương thi, phong thủy. Như Đạo Mộ Bút Ký.',
+  'Cổ đại làm ruộng': 'Cổ đại nghèo khó, làm giàu từ tay trắng, buôn bán, gia đình no ấm.',
+  'Không gian Tùy thân': 'Sở hữu không gian bí mật, trồng linh dược, chứa đồ, bàn đạp thăng cấp.',
+  'ABO': 'Omegaverse Alpha/Beta/Omega, bản năng, chất dẫn dụ, đánh dấu, tình cảm gai góc.',
+  'Ma cà rồng': 'Vampire/người sói/thợ săn, bản năng khát máu vs nhân tính, Dark Romance.',
+  'Đồng nhân Anime': 'Manga/Anime nổi tiếng (One Piece, Naruto, Pokemon...), tương tác nhân vật gốc.',
+  'Game': 'Môi trường game VR hoặc võng du, đánh quái, thăng cấp, guild, e-sports, tranh bá.',
+  'Đồng nhân': 'Dựa trên tác phẩm gốc có sẵn, xuyên vào thế giới gốc, thay đổi cốt truyện.',
+};
+
 const SUBGENRE_MAP = {
 // Tu luyện / Huyền huyễn
 'Tiên Hiệp': {
@@ -4652,12 +4764,59 @@ const SUBGENRE_MAP = {
 
 // Default sub-genres khi không có map cụ thể
 const DEFAULT_SUBGENRES = {
-'Yếu tố phụ': ['💕 Ngôn tình', '🌸 Bách hợp', '🌙 Đam mỹ', '🔍 Phá án', '🏯 Cung đấu', '😂 Hài hước', '🌑 Hắc ám'],
-'Thêm': ['🔄 Trọng sinh', '🌀 Xuyên không', '🌀 Xuyên nhanh', '⚡ Hệ thống', '⚡ Kim chỉ', '🔥 Sảng văn', '📚 Văn học'],
+'Yếu tố phụ': ['💕 Ngôn tình', '🌸 Bách hợp', '🌙 Đam mỹ', '🔍 Phá án', '🏯 Cung đấu', '😂 Hài hước', '🌑 Hắc ám', '👑 Nữ cường', '💔 Ngược luyến'],
+'Tag phổ biến': ['🔄 Trọng sinh', '🌀 Xuyên không', '🌀 Xuyên nhanh', '⚡ Hệ thống', '⚡ Kim chỉ', '🔥 Sảng văn', '∞ Vô địch lưu', '💑 Song hướng thầm mến', '🍬 Ngọt sủng', '🏠 Gia đấu', '🎓 Vườn trường', '☠️ Mạt thế'],
+'Thêm': ['📚 Văn học', '🧿 Không gian tùy thân', '⚡ Dị năng', '😂 Hài hước lầy', '🌿 Điền văn', '1️⃣ 1v1 (HE)'],
 };
 
 // ── Extra entries for genres missing from map ─────────────────────────────
 Object.assign(SUBGENRE_MAP, {
+'Hồng hoang': {
+  'Yếu tố chính': ['🌟 Thần thánh', '⚔️ Tranh bá', '🌌 Vũ trụ quy mô', '📿 Tu luyện hồng hoang'],
+  'Màu sắc': ['🌑 Hắc ám bi tráng', '🔥 Sử thi hoành tráng', '🌙 Đam mỹ', '🌸 Bách hợp'],
+  'Thêm': ['⚡ Cơ duyên pháp bảo', '🐉 Linh thú thần thú'],
+},
+'Không gian Tùy thân': {
+  'Bối cảnh': ['🏯 Cổ đại', '🌀 Dị giới', '🐉 Tu tiên', '🔮 Ma pháp', '🌿 Điền văn'],
+  'Yếu tố phụ': ['🌱 Trồng trọt linh dược', '💊 Luyện đan', '💕 Ngôn tình', '🌸 Bách hợp', '🔥 Sảng văn'],
+  'Thêm': ['🔄 Trọng sinh', '⚡ Hệ thống', '👑 Nữ cường'],
+},
+'Thám hiểm lăng mộ': {
+  'Yếu tố chính': ['🏺 Trộm mộ', '🔦 Khám phá di tích', '☠️ Cương thi quái vật', '🗺️ Phong thủy địa lý'],
+  'Màu sắc': ['🌑 Hắc ám', '😱 Kinh dị', '💕 Ngôn tình', '🌙 Đam mỹ', '🔥 Hành động'],
+  'Thêm': ['⚡ Dị năng', '🧿 Bảo vật cổ đại'],
+},
+'ABO': {
+  'Bối cảnh': ['🚀 Tinh tế vũ trụ', '🏙️ Đô thị hiện đại', '🐉 Tu tiên', '🏯 Cổ đại'],
+  'Yếu tố phụ': ['🌙 Đam mỹ', '🌸 Bách hợp', '💕 Nam nữ', '🔥 Sảng văn'],
+  'Màu sắc': ['🍬 Ngọt sủng', '🌑 Ngược tâm', '😂 Hài hước', '📚 Văn học'],
+},
+'Ma cà rồng': {
+  'Bối cảnh': ['🌃 Đô thị tối', '🏰 Lâu đài cổ', '🌙 Thế giới huyền bí'],
+  'Yếu tố phụ': ['💕 Ngôn tình', '🌙 Đam mỹ', '🌸 Bách hợp', '🌑 Dark Romance', '🔍 Thám tử huyền bí'],
+  'Màu sắc': ['🌑 Hắc ám tăm tối', '🍬 Ngọt sủng', '😂 Hài hước', '🔥 Hành động'],
+},
+'Ngôn tình võng du': {
+  'Yếu tố game': ['⚔️ Tu tiên online', '🏆 PK tranh bá', '🎭 Nhập vai', '🎮 eSports'],
+  'Yếu tố phụ': ['💕 Ngôn tình', '🌸 Bách hợp', '🌙 Đam mỹ', '😂 Hài hước'],
+  'Thêm': ['🔄 Trọng sinh', '⚡ Hệ thống trong game'],
+},
+'Cổ đại làm ruộng': {
+  'Yếu tố chính': ['🌱 Trồng trọt', '🐄 Chăn nuôi', '💰 Làm giàu từ đầu', '🏠 Xây dựng gia đình'],
+  'Màu sắc': ['💕 Ngôn tình', '🌸 Bách hợp', '😂 Hài hước', '🌿 Ấm áp chữa lành'],
+  'Thêm': ['🔄 Trọng sinh cổ đại', '⚡ Không gian tùy thân', '👨‍👩‍👧 Gia đình ấm áp'],
+},
+'Game': {
+  'Thể loại game': ['⚔️ MMORPG tu tiên', '🏆 MOBA eSports', '🌀 Isekai game', '🎮 VR thực tế ảo'],
+  'Yếu tố phụ': ['💕 Ngôn tình', '🌸 Bách hợp', '🌙 Đam mỹ', '⚡ Hệ thống', '🔥 Sảng văn'],
+  'Thêm': ['🔄 Trọng sinh game', '⚽ eSports', '🏆 Tranh bá server'],
+},
+'Đồng nhân': {
+  'Tác phẩm gốc': ['📺 Anime/Manga', '🎬 Phim', '📚 Tiểu thuyết', '🎮 Game', '🌟 Idol/Showbiz'],
+  'Yếu tố phụ': ['💕 Ngôn tình', '🌙 Đam mỹ', '🌸 Bách hợp', '🔄 Xuyên vào truyện', '😂 Hài hước'],
+  'Màu sắc': ['🔥 Sảng văn', '🌑 Hắc hóa', '🍬 Ngọt sủng', '📚 Văn học'],
+},
+
 'Trọng sinh': {
   'Bối cảnh': ['🏙️ Đô thị hiện đại', '🏯 Cổ đại', '🐉 Tu tiên/Tiên Hiệp', '🔮 Ma pháp dị giới', '🎓 Học đường', '⚔️ Võ hiệp', '🚀 Tương lai'],
   'Yếu tố phụ': ['💕 Ngôn tình', '🌸 Bách hợp', '🌙 Đam mỹ', '💼 Thương chiến', '🎬 Showbiz', '🔥 Sảng văn phản kích', '🏆 Vả mặt kẻ xấu'],
@@ -4689,6 +4848,61 @@ Object.assign(SUBGENRE_MAP, {
   'Thêm': ['💕 Ngôn tình hắc ám', '🌸 Bách hợp hắc', '🌙 Đam mỹ hắc', '🔄 Trọng sinh phục thù'],
 },
 });
+
+// ── Subgenres for remaining new genres ───────────────────────────────────────
+Object.assign(SUBGENRE_MAP, {
+'Gia đấu': {
+  'Yếu tố chính': ['🏠 Mẹ chồng nàng dâu', '💰 Tranh gia sản', '👨‍👩‍👧 Các phòng kèn cựa', '🔍 Tính toán gia tộc'],
+  'Màu sắc': ['💕 Ngôn tình', '🌸 Bách hợp', '🌙 Đam mỹ', '🔥 Sảng văn vả mặt', '😂 Hài hước'],
+  'Thêm': ['🔄 Trọng sinh', '👑 Nữ cường gia đấu', '⚡ Kim chỉ'],
+},
+'Tổng tài': {
+  'Bối cảnh': ['🏙️ Đô thị hiện đại', '🏰 Hào môn', '🎬 Showbiz', '🏥 Y thuật', '💼 Thương chiến'],
+  'Yếu tố phụ': ['🍬 Ngọt sủng', '💔 Ngược tâm', '🔄 Trọng sinh', '🌸 Bách hợp', '😂 Hài hước'],
+  'Thêm': ['⚡ Kim chỉ ẩn thân phận', '🏆 Vả mặt', '👶 Mang thai chạy trốn'],
+},
+'Thanh xuân vườn trường': {
+  'Bối cảnh': ['🎓 THPT', '🏫 Đại học', '🎭 Câu lạc bộ', '⚽ Thể thao học đường'],
+  'Yếu tố phụ': ['💕 Tình đầu', '🌸 Bách hợp', '🌙 Đam mỹ', '😂 Hài hước', '🔥 Học bá'],
+  'Màu sắc': ['🍬 Ngọt sủng', '💔 Ngược tâm thanh xuân', '🎭 Drama học đường', '🔄 Trọng sinh'],
+},
+'Mạt thế': {
+  'Yếu tố chính': ['🧟 Zombie', '☢️ Biến dị sinh học', '⚡ Dị năng giả', '🏗️ Xây dựng căn cứ'],
+  'Màu sắc': ['🌑 Sinh tồn hắc ám', '💕 Ngôn tình', '🌸 Bách hợp', '🌙 Đam mỹ', '🔥 Hành động'],
+  'Thêm': ['🔄 Trọng sinh mạt thế', '⚡ Hệ thống', '👑 Nữ cường mạt thế'],
+},
+'Linh dị - Bí ẩn': {
+  'Yếu tố chính': ['🔮 Phong thủy địa lý', '👁️ Đạo sĩ trừ tà', '🦊 Yêu quái linh hồn', '🔍 Điều tra huyền bí'],
+  'Bối cảnh': ['🏙️ Đô thị', '🏯 Nông thôn cổ trấn', '🏯 Cổ đại', '∞ Vô hạn lưu'],
+  'Màu sắc': ['💕 Ngôn tình', '🌙 Đam mỹ', '🌸 Bách hợp', '😂 Hài hước linh dị', '🌑 Hắc ám'],
+},
+'Kỳ ảo phương Tây': {
+  'Yếu tố chính': ['⚔️ Hiệp sĩ chiến tranh', '🔮 Hệ thống ma pháp', '🐉 Rồng & linh thú', '👑 Vương quốc tranh đoạt'],
+  'Màu sắc': ['💕 Ngôn tình', '🌸 Bách hợp', '🌙 Đam mỹ', '🌑 Hắc ám', '🔥 Hành động'],
+  'Thêm': ['⚡ Hệ thống', '🔄 Trọng sinh dị giới', '🌀 Xuyên vào thế giới game'],
+},
+'Game': {
+  'Thể loại': ['⚔️ MMORPG tu tiên', '🏆 MOBA/RTS eSports', '🌀 VR thực tế ảo', '🎮 Võng du offline'],
+  'Yếu tố phụ': ['💕 Ngôn tình', '🌸 Bách hợp', '🌙 Đam mỹ', '⚡ Hệ thống', '🔥 Sảng văn tranh bá'],
+  'Thêm': ['🔄 Trọng sinh game', '🏆 Top 1 server', '💑 Gặp nhau online/offline'],
+},
+'Ngôn tình võng du': {
+  'Yếu tố game': ['⚔️ Tu tiên online', '🏆 PK tranh bá', '🎭 Nhập vai nhân vật', '🎮 eSports thi đấu'],
+  'Tuyến tình cảm': ['💕 Gặp nhau trong game', '🌸 Bách hợp võng du', '🌙 Đam mỹ võng du'],
+  'Thêm': ['🔄 Trọng sinh game', '😂 Hài hước lầy', '💑 Offline gặp mặt thật'],
+},
+'Đồng nhân': {
+  'Nguồn gốc': ['📺 Anime/Manga', '🎬 Phim/Series', '📚 Tiểu thuyết nổi tiếng', '🎮 Game', '🌟 Idol/Nhóm nhạc'],
+  'Yếu tố': ['🌀 Xuyên vào truyện', '💕 Tình cảm với nhân vật gốc', '🔄 Thay đổi kết cục', '😈 Làm phản diện'],
+  'Màu sắc': ['🌙 Đam mỹ', '🌸 Bách hợp', '💕 Ngôn tình', '🔥 Sảng văn', '📚 Văn học'],
+},
+'Đồng nhân Anime': {
+  'Bộ phổ biến': ['🏴‍☠️ One Piece', '🍥 Naruto/Boruto', '⚔️ Bleach', '🔮 Fairy Tail', '🎮 Pokemon', '🌟 Khác'],
+  'Yếu tố': ['🌀 Xuyên vào thế giới', '💪 Mạnh hơn nhân vật gốc', '💕 Tình cảm với NV gốc'],
+  'Màu sắc': ['🌙 Đam mỹ', '🌸 Bách hợp', '💕 Ngôn tình', '🔥 Hành động sảng', '😂 Hài hước'],
+},
+});
+
 
 let selectedSubGenres = [];
 
@@ -5049,36 +5263,57 @@ const token = await getAuthToken();
 if (!token) throw new Error('Chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.');
 
 const model = settings.model || 'claude-sonnet-4-6';
+const VALID_MODELS = ['claude-sonnet-4-6','claude-opus-4-6','claude-haiku-4-5-20251001'];
+const safeModel = VALID_MODELS.includes(model) ? model : 'claude-sonnet-4-6';
 const temperature = Math.min(1.0, Math.max(0.0, temp !== undefined ? parseFloat(temp) : (parseFloat(settings.temperature) || 0.8)));
 
-const response = await fetch(EDGE_URL, {
-method: 'POST',
-headers: {
-'Content-Type': 'application/json',
-'Authorization': `Bearer ${token}`,
-},
-body: JSON.stringify({
-prompt,
-maxTokens: Math.min(16000, maxTokens || settings.maxTokens || 8000),
-temperature,
-model,
-})
-});
+// Auto-retry up to 3 times if result is empty or network error
+let lastError = null;
+for (let attempt = 1; attempt <= 3; attempt++) {
+  try {
+    const response = await fetch(EDGE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({
+        prompt,
+        maxTokens: Math.min(4000, maxTokens || settings.maxTokens || 2000),
+        temperature,
+        model: safeModel,
+      })
+    });
 
-const data = await response.json();
+    const data = await response.json();
 
-if (response.status === 429 && data.error === 'quota_exceeded') {
-showQuotaExceeded(data);
-throw new Error(data.message || 'Hết quota hôm nay');
+    if (response.status === 429 && data.error === 'quota_exceeded') {
+      showQuotaExceeded(data);
+      throw new Error(data.message || 'Hết quota hôm nay');
+    }
+    if (!response.ok) {
+      throw new Error(data.error || `Lỗi server ${response.status}`);
+    }
+
+    if (data.usage) updateQuotaBar(data.usage);
+
+    const result = data.result || '';
+    // Retry if result is suspiciously empty
+    if (!result.trim() && attempt < 3) {
+      console.warn(`Lần ${attempt}: kết quả rỗng, thử lại...`);
+      await new Promise(r => setTimeout(r, 1500 * attempt));
+      continue;
+    }
+    return result;
+
+  } catch(e) {
+    // Don't retry quota errors
+    if (e.message && e.message.includes('quota')) throw e;
+    lastError = e;
+    if (attempt < 3) {
+      console.warn(`Lần ${attempt} thất bại: ${e.message}. Thử lại sau ${attempt}s...`);
+      await new Promise(r => setTimeout(r, 1000 * attempt));
+    }
+  }
 }
-if (!response.ok) {
-throw new Error(data.error || `Lỗi server ${response.status}`);
-}
-
-// Update quota bar
-if (data.usage) updateQuotaBar(data.usage);
-
-return data.result || '';
+throw lastError || new Error('Thất bại sau 3 lần thử.');
 }
 
 async function callClaudeStream(prompt, onChunk, maxTokens, temp) {
@@ -5648,13 +5883,29 @@ ${writtenSummary ? '\n═══ TÓM TẮT CÁC CHƯƠNG ĐÃ VIẾT ═══\n
   // 1 từ ≈ 1.5 tokens, 2000 từ = 3000 tokens max
 const neededTokens = Math.min(Math.ceil(targetWords * 1.5), 3000);  // 1300 từ → ~2340 tokens
   const chapterMaxTokens = Math.min(4000, Math.max(neededTokens, 2000));  // cap 4000 tokens
-  const chapterText = await callClaude(prompt, chapterMaxTokens, temp);
-  if (!chapterText || chapterText.trim().length < 100) {
-  toast('\u26a0\ufe0f N\u1ed9i dung qu\xe1 ng\u1eafn, th\u1eed l\u1ea1i.');
-  cwWriting = false; setChStatus('idle', 'Th\u1eed l\u1ea1i');
-  if (writeBtn) { writeBtn.disabled = false; writeBtn.textContent = `\u270d\ufe0f Vi\u1ebft ch\u01b0\u01a1ng ${ch.num}`; }
+  document.getElementById('ch-write-hint').textContent = '⏳ Đang viết nập... (bước 1/2)';
+  const draftText = await callClaude(prompt, chapterMaxTokens, temp);
+  if (!draftText || draftText.trim().length < 100) {
+  toast('⚠️ Nội dung quá ngắn, thử lại.');
+  cwWriting = false; setChStatus('idle', 'Thử lại');
+  if (writeBtn) { writeBtn.disabled = false; writeBtn.textContent = '✍️ Viết chương ' + ch.num; }
   return;
   }
+
+  // SELF-REFLECTION: AI tự đối chiếu với dàn ý rồi viết lại
+  document.getElementById('ch-write-hint').textContent = '⏳ AI đang tự kiểm tra và hoàn thiện... (bước 2/2)';
+  const reflectPrompt = 'Bạn vừa viết nập chương. Kế hoạch bắt buộc: ' + ch.desc +
+    '\n\nNập:\n' + draftText.slice(0, 2000) +
+    '\n\nTự đánh giá theo 4 tiêu chí:' +
+    '\n1. Có bóm sất kế hoạch chương không?' +
+    '\n2. Nhân vật nhất quón không?' +
+    '\n3. Có giọng AI/cơ học (lặp từ, câu nối tậu) không?' +
+    '\n4. Logic tuyến truyện đúng không?' +
+    '\n\nNếu có lỗi: viết lại TOÀN BỘ tốt hơn.' +
+    '\nNếu đạt tất cả: xuất nguyên nập.' +
+    '\nCHỆ XUẤT NỘI DUNG CHƯƠNG, không giải thích. Tiếng Việt.';
+  const reflectResult = await callClaude(reflectPrompt, chapterMaxTokens, Math.max(0.3, temp - 0.1));
+  const chapterText = (reflectResult && reflectResult.trim().length > 200) ? reflectResult : draftText;
   const outEl = document.getElementById('ch-output');
   outEl.textContent = '';
   const parts = chapterText.split('\n');
@@ -6218,11 +6469,22 @@ const chars = proj.chars || '';
 const world = proj.world || '';
 const plot  = proj.plot  || '';
 
-// Context from previous chapter
+// Context from previous chapters - prefer summary if available, else last 800 chars
 const prevCh = idx > 0 ? contProjChapters[idx-1] : null;
-const prevContent = prevCh && proj.content[prevCh.num]
-? proj.content[prevCh.num].text.slice(-600) : '';
-const contextNote = prevContent ? '\n\nCuối chương trước:\n' + prevContent : '';
+const prevChData = prevCh && proj.content && proj.content[prevCh.num];
+const prevContent = prevChData
+  ? (prevChData.summary || prevChData.text.slice(-800))
+  : '';
+const contextNote = prevContent ? '\n\nĐoạn cuối chương trước:\n' + prevContent : '';
+
+// Tóm tắt các chương đã viết (dùng summary nếu có, tiết kiệm token)
+const writtenCtx = contProjChapters.slice(0, idx)
+  .filter(x => proj.content && proj.content[x.num])
+  .map(x => {
+    const d = proj.content[x.num];
+    return 'Chương ' + x.num + ' (' + x.title + '): ' + (d.summary || d.text.slice(0,150) + '...');
+  })
+  .join('\n');
 
 // Full outline
 const fullOutline = contProjChapters.map(c => 'Chương ' + c.num + ': ' + c.title + ' - ' + c.desc).join('\n');
@@ -6238,7 +6500,7 @@ const prompt = 'Nhà văn chuyên ' + genre + '. Viết Chương ' + ch.num + '/
 (chars ? 'Nhân vật: ' + chars.slice(0,200) + '\n' : '') +
 (world ? 'Thế giới: ' + world.slice(0,120) + '\n' : '') +
 (plot  ? 'Cốt truyện: ' + plot.slice(0,120) + '\n' : '') +
-contextNote + '\n\n' +
+contextNote + (writtenCtx ? '\n\nTóm tắt các chương trước:\n' + writtenCtx : '') + '\n\n' +
 (voiceProfile || voiceFiles.length ? (
   '\n\n[PHONG C\u00c1CH VI\u1ebcT THAM KH\u1ea2O - CH\u1ec6 H\u1eccC C\u00c1CH VI\u1ebcT, KH\u00d4NG COPY N\u1ed8I DUNG]\n' +
   (voiceProfile ? voiceProfile.slice(0,250) + '\n' : '') +
@@ -6251,7 +6513,20 @@ const writeBtn = document.querySelector('#cont-ch-actions .btn-primary');
 if (writeBtn) { writeBtn.disabled = true; writeBtn.textContent = '⏳...'; }
 
 try {
-const text = await callClaude(prompt, neededTokens, temp); // max 3000 tokens
+const out2 = document.getElementById('cont-ch-output');
+out2.textContent = '⏳ Đang viết nập... (1/2)';
+const draftText2 = await callClaude(prompt, neededTokens, temp);
+
+// SELF-REFLECTION
+out2.textContent = '⏳ AI đang tự kiểm tra... (2/2)';
+const reflectPrompt2 = 'Kế hoạch chương: ' + (ch.desc || 'Tiếp nối mạch truyện') +
+  '\n\nNập:\n' + (draftText2||'').slice(0, 2000) +
+  '\n\nTự đánh giá: bám sất kế hoạch, nhân vật nhất quán, không giọng AI.' +
+  '\nNếu có lỗi: viết lại TOÀN BỘ tốt hơn. Nếu đạt: xuất nguyên.' +
+  '\nCHỆ XUẤT NỘI DUNG. Tiếng Việt.';
+const reflectResult2 = await callClaude(reflectPrompt2, neededTokens, Math.max(0.3, temp - 0.1));
+const text = (reflectResult2 && reflectResult2.trim().length > 200) ? reflectResult2 : (draftText2 || '');
+
 // Animate display
 const parts = text.split('\n');
 let shown = '';
@@ -6265,6 +6540,9 @@ if (!proj.content) proj.content = {};
 proj.content[ch.num] = { title: ch.title, text };
 proj.completed = Object.keys(proj.content).length;
 saveProjects();
+
+// Auto-summarize in background for better context next time
+autoSummarizeChapter(proj, ch, text).catch(()=>{});
 
 // Refresh UI
 renderContChapterList(proj);
@@ -6314,6 +6592,10 @@ const s = await callClaude(p, 200, 0.3);
 if (!s) return;
 if (!proj.chapter_summaries) proj.chapter_summaries = {};
 proj.chapter_summaries[ch.num] = s.trim();
+// Also store inside content for easy access in context building
+if (proj.content && proj.content[ch.num]) {
+  proj.content[ch.num].summary = s.trim();
+}
 saveProjects();
 if (currentUser) await sb.from('projects').update({chapter_summaries:proj.chapter_summaries}).eq('id',proj._dbId||proj.id).eq('user_id',currentUser.id);
 } catch(e) { console.warn('Summary fail:',e.message); }
@@ -6938,7 +7220,10 @@ toast._t = setTimeout(() => el.classList.remove('show'), duration);
 
 <div class="auth-form" id="auth-login-form">
   <input type="email" id="auth-email" placeholder="Email" autocomplete="email">
-  <input type="password" id="auth-password" placeholder="Mật khẩu" autocomplete="current-password">
+  <div style="position:relative;">
+      <input type="password" id="auth-password" placeholder="Mật khẩu" autocomplete="current-password" style="padding-right:2.5rem;">
+      <button type="button" onclick="togglePwd('auth-password',this)" style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--mist);padding:0;">👁</button>
+    </div>
   <div class="auth-error" id="auth-error"></div>
   <label style="display:flex;align-items:center;gap:.5rem;font-size:.81rem;color:var(--mist);cursor:pointer;user-select:none;font-weight:400;text-transform:none;letter-spacing:0;">
     <input type="checkbox" id="remember-me" style="width:15px;height:15px;cursor:pointer;accent-color:var(--gold);">
@@ -6950,8 +7235,14 @@ toast._t = setTimeout(() => el.classList.remove('show'), duration);
 
 <div class="auth-form" id="auth-signup-form" style="display:none;">
   <input type="email" id="auth-signup-email" placeholder="Email">
-  <input type="password" id="auth-signup-pass" placeholder="Mật khẩu (ít nhất 6 ký tự)">
-  <input type="password" id="auth-signup-pass2" placeholder="Nhập lại mật khẩu">
+  <div style="position:relative;">
+      <input type="password" id="auth-signup-pass" placeholder="Mật khẩu (ít nhất 6 ký tự)" style="padding-right:2.5rem;">
+      <button type="button" onclick="togglePwd('auth-signup-pass',this)" style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--mist);padding:0;">👁</button>
+    </div>
+  <div style="position:relative;">
+      <input type="password" id="auth-signup-pass2" placeholder="Nhập lại mật khẩu" style="padding-right:2.5rem;">
+      <button type="button" onclick="togglePwd('auth-signup-pass2',this)" style="position:absolute;right:.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--mist);padding:0;">👁</button>
+    </div>
   <div class="auth-error" id="auth-signup-error"></div>
   <div class="auth-success" id="auth-signup-success"></div>
   <button class="btn-auth-primary" onclick="signUpEmail()">Tạo tài khoản</button>
